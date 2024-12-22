@@ -1,0 +1,580 @@
+---
+title: "Restructured Statistical Analysis"
+format: html
+editor: visual
+---
+
+## Purpose: Restructure Statistical Analysis to adjust for multicollinearity before taking logarithms
+
+## Load libraries and data
+
+```{r, show = FALSE, message = FALSE}
+library(tidyverse)
+library(plm)
+library(car)
+library(pglm)
+library(censReg)
+library(patchwork)
+library(viridis)
+library(reshape2)
+library(lmtest)
+library(psych)
+```
+
+```{r}
+read_csv("../Data/cleaned_full_dataset.csv") -> health_data
+```
+
+```{r}
+glimpse(health_data)
+```
+
+## Descriptive Statistics
+
+```{r}
+health_data |> 
+  select(-c(country, country_code, year)) |> 
+  describe() |> 
+  as_tibble(rownames = "variable") |>
+  select(-c(trimmed, mad, kurtosis)) |> 
+  rename("id" = vars) -> descriptive_statistics
+
+write_csv(descriptive_statistics, file = "../Data/descriptive_statistics.csv")
+```
+
+## Preliminary Model
+
+```{r}
+panel_lm_raw_data_ob <- plm(overweight_rate ~ private_health_exppc_ppp + government_health_exppc_ppp + gdppc_ppp + unemployment_rate + urban_population + kcal_per_capita, index = c("country", "year"), model = "within", data = health_data)
+summary(panel_lm_raw_data_ob)
+
+panel_lm_raw_data_hy <- plm(hypertension_rate ~ private_health_exppc_ppp + government_health_exppc_ppp + gdppc_ppp + unemployment_rate + urban_population + kcal_per_capita, index = c("country", "year"), model = "within", data = health_data)
+summary(panel_lm_raw_data_hy)
+
+panel_lm_raw_data_dm <- plm(disease_mortality_rate ~ private_health_exppc_ppp + government_health_exppc_ppp + gdppc_ppp + unemployment_rate + urban_population + kcal_per_capita, index = c("country", "year"), model = "within", data = health_data)
+summary(panel_lm_raw_data_dm)
+```
+
+## Check for multicollinearity in model
+
+### Make panel dataframe, pooling model to test vif - only necessary for 1/3 models because vif is dependent on the relationship among predictors, which are equivalent in all models
+
+```{r}
+panel_health_data <- pdata.frame(health_data, index = c("country", "year"))
+
+pooling_model_ob <- plm(overweight_rate ~ private_health_exppc_ppp + government_health_exppc_ppp + gdppc_ppp + unemployment_rate + urban_population + kcal_per_capita, data = panel_health_data, model = "pooling")
+
+vif(pooling_model_ob) |> 
+  as.data.frame() |> 
+  rename(vif = `vif(pooling_model_ob)`) |> 
+  mutate(variable = c("private_health_exppc_ppp", "government_health_exppc_ppp", "gdppc_ppp", "unemployment_rate", "urban_population", "kcal_per_capita")) |> 
+  select(variable, vif) -> vif_preliminary_model
+
+write_csv(vif_preliminary_model, "../Data/vif_preliminary_model.csv")
+```
+
+```{r}
+panel_health_data |> 
+  select(private_health_exppc_ppp, government_health_exppc_ppp, gdppc_ppp, unemployment_rate, urban_population, kcal_per_capita) |> cor() -> prelim_cor_matrix
+
+# Reshape the correlation matrix into long format
+cor_matrix_melted <- melt(prelim_cor_matrix)
+
+# Create the correlation matrix plot
+ggplot(cor_matrix_melted, aes(Var1, Var2, fill = value)) +
+  geom_tile() +
+  geom_text(aes(label = round(value, 2)), color = "white", size = 3) +  # Add correlation values
+  scale_fill_gradient2(low = "red", high = "blue", mid = "white", midpoint = 0) +
+  theme_minimal() +
+  labs(title = "Correlation Matrix: Preliminary Model Predictors", x = "", y = "") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  scale_fill_viridis()
+```
+
+We observe strong multicollinearity between GDP and our other variables. We will adjust our model to account for this multicollinearity by running bivariate regressions between GDP and each other predictor, then using GDP and the residuals of those bivariate regressions as our new set of predictors.
+
+## Fix multicollinearity
+
+### Preferred method: Use bivariate regressions for each predictor on GDP, keep residuals
+
+We are asking the question -- What amount of health expenditure, unemployment, urban population, and calorie supply is not explained by GDP?
+
+#### Run bivariate regressions on GDP
+
+```{r}
+br_pri_gdp <- plm(private_health_exppc_ppp ~ gdppc_ppp, index = c("country", "year"), model = "within", data = health_data)
+br_pub_gdp <- plm(government_health_exppc_ppp ~ gdppc_ppp, index = c("country", "year"), model = "within", data = health_data)
+br_unemp_gdp <- plm(unemployment_rate ~ gdppc_ppp, index = c("country", "year"), model = "within", data = health_data)                
+br_urban_gdp <- plm(urban_population ~ gdppc_ppp, index = c("country", "year"), model = "within", data = health_data)
+br_kcal_gdp <- plm(kcal_per_capita ~ gdppc_ppp, index = c("country", "year"), model = "within", data = health_data)
+
+```
+
+#### Collect residuals to form adjusted predictors
+
+```{r}
+
+health_data_gdp_adjusted <- data.frame(
+  
+  country = health_data$country,
+  year = health_data$year,
+  gdp_adjusted_private_health_exppc_ppp = br_pri_gdp$residuals,
+  gdp_adjusted_government_health_exppc_ppp = br_pub_gdp$residuals,
+  gdppc_ppp = health_data$gdppc_ppp,
+  gdp_adjusted_unemployment_rate = br_unemp_gdp$residuals,
+  gdp_adjusted_urban_population_rate = br_urban_gdp$residuals,
+  gdp_adjusted_kcal_supply = br_kcal_gdp$residuals,
+  overweight_rate = health_data$overweight_rate,
+  hypertension_rate = health_data$hypertension_rate,
+  disease_mortality_rate = health_data$disease_mortality_rate
+)
+
+```
+
+## New Model with GDP-adjusted variables
+
+### Descriptive Statistics
+
+```{r}
+health_data_gdp_adjusted |> 
+  summary()
+```
+
+### Fixed Effects
+
+```{r}
+panel_lm_gdp_adjusted_ob_fe <- plm(overweight_rate ~ gdp_adjusted_private_health_exppc_ppp + gdp_adjusted_government_health_exppc_ppp + gdppc_ppp + gdp_adjusted_unemployment_rate + gdp_adjusted_urban_population_rate + gdp_adjusted_kcal_supply, index = c("country", "year"), model = "within", data = health_data_gdp_adjusted)
+summary(panel_lm_gdp_adjusted_ob_fe)
+
+panel_lm_gdp_adjusted_hy_fe <- plm(hypertension_rate ~ gdp_adjusted_private_health_exppc_ppp + gdp_adjusted_government_health_exppc_ppp + gdppc_ppp + gdp_adjusted_unemployment_rate + gdp_adjusted_urban_population_rate + gdp_adjusted_kcal_supply, index = c("country", "year"), model = "within", data = health_data_gdp_adjusted)
+summary(panel_lm_gdp_adjusted_hy_fe)
+
+panel_lm_gdp_adjusted_dm_fe <- plm(disease_mortality_rate ~ gdp_adjusted_private_health_exppc_ppp + gdp_adjusted_government_health_exppc_ppp + gdppc_ppp + gdp_adjusted_unemployment_rate + gdp_adjusted_urban_population_rate + gdp_adjusted_kcal_supply, index = c("country", "year"), model = "within", data = health_data_gdp_adjusted)
+summary(panel_lm_gdp_adjusted_dm_fe)
+```
+
+### Random Effects
+
+```{r}
+panel_lm_gdp_adjusted_ob_re <- plm(overweight_rate ~ gdp_adjusted_private_health_exppc_ppp + gdp_adjusted_government_health_exppc_ppp + gdppc_ppp + gdp_adjusted_unemployment_rate + gdp_adjusted_urban_population_rate + gdp_adjusted_kcal_supply, index = c("country", "year"), model = "random", data = health_data_gdp_adjusted)
+summary(panel_lm_gdp_adjusted_ob_re)
+
+panel_lm_gdp_adjusted_hy_re <- plm(hypertension_rate ~ gdp_adjusted_private_health_exppc_ppp + gdp_adjusted_government_health_exppc_ppp + gdppc_ppp + gdp_adjusted_unemployment_rate + gdp_adjusted_urban_population_rate + gdp_adjusted_kcal_supply, index = c("country", "year"), model = "random", data = health_data_gdp_adjusted)
+summary(panel_lm_gdp_adjusted_hy_re)
+
+panel_lm_gdp_adjusted_dm_re <- plm(disease_mortality_rate ~ gdp_adjusted_private_health_exppc_ppp + gdp_adjusted_government_health_exppc_ppp + gdppc_ppp + gdp_adjusted_unemployment_rate + gdp_adjusted_urban_population_rate + gdp_adjusted_kcal_supply, index = c("country", "year"), model = "random", data = health_data_gdp_adjusted)
+summary(panel_lm_gdp_adjusted_dm_re)
+```
+
+### Hausman Test
+
+```{r}
+phtest(panel_lm_gdp_adjusted_ob_fe, panel_lm_gdp_adjusted_ob_re)
+phtest(panel_lm_gdp_adjusted_hy_fe, panel_lm_gdp_adjusted_hy_re)
+phtest(panel_lm_gdp_adjusted_dm_fe, panel_lm_gdp_adjusted_dm_re)
+```
+
+Hausman tests all favor the random effects model.
+
+## Test new model for multicollinearity
+
+```{r}
+panel_health_data_gdp_adjusted <- pdata.frame(health_data_gdp_adjusted, index = c("country", "year"))
+
+pooling_model_gdp_adjusted_ob <- plm(overweight_rate ~ gdp_adjusted_private_health_exppc_ppp + gdp_adjusted_government_health_exppc_ppp + gdppc_ppp + gdp_adjusted_unemployment_rate + gdp_adjusted_urban_population_rate + gdp_adjusted_kcal_supply, data = panel_health_data_gdp_adjusted, model = "pooling")
+
+vif(pooling_model_gdp_adjusted_ob)
+
+vif(pooling_model_gdp_adjusted_ob) |> 
+  as.data.frame() |> 
+  rename(vif = `vif(pooling_model_gdp_adjusted_ob)`) |> 
+  mutate(variable = c("gdp_adjusted_private_health_exppc_ppp", "gdp_adjusted_government_health_exppc_ppp", "gdppc_ppp", "gdp_adjusted_unemployment_rate", "gdp_adjusted_urban_population", "gdp_adjusted_kcal_per_capita")) |> 
+  select(variable, vif) -> vif_revised_model
+
+write_csv(vif_revised_model, "../Data/vif_revised_model.csv")
+```
+
+```{r}
+panel_health_data_gdp_adjusted |> 
+  select(gdp_adjusted_private_health_exppc_ppp, gdp_adjusted_government_health_exppc_ppp, gdppc_ppp, gdp_adjusted_unemployment_rate, gdp_adjusted_urban_population_rate, gdp_adjusted_kcal_supply) |> cor() -> gdp_adjusted_cor_matrix
+
+# Reshape the correlation matrix into long format
+gdp_adjusted_cor_matrix_melted <- melt(gdp_adjusted_cor_matrix)
+
+# Create the correlation matrix plot
+ggplot(gdp_adjusted_cor_matrix_melted, aes(Var1, Var2, fill = value)) +
+  geom_tile() +
+  geom_text(aes(label = round(value, 2)), color = "white", size = 3) +  # Add correlation values
+  scale_fill_gradient2(low = "red", high = "blue", mid = "white", midpoint = 0) +
+  theme_minimal() +
+  labs(title = "Correlation Matrix: GDP-Adjusted Model Predictors", x = "", y = "") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  scale_fill_viridis()
+```
+
+## Add interaction term into model
+
+```{r}
+panel_lm_gdp_adjusted_ob_re_full <- plm(overweight_rate ~ gdp_adjusted_private_health_exppc_ppp + gdp_adjusted_government_health_exppc_ppp + gdppc_ppp + gdp_adjusted_unemployment_rate + gdp_adjusted_urban_population_rate + gdp_adjusted_kcal_supply + gdp_adjusted_private_health_exppc_ppp:gdp_adjusted_government_health_exppc_ppp, index = c("country", "year"), model = "random", data = health_data_gdp_adjusted)
+summary(panel_lm_gdp_adjusted_ob_re_full)
+
+panel_lm_gdp_adjusted_hy_re_full <- plm(hypertension_rate ~ gdp_adjusted_private_health_exppc_ppp + gdp_adjusted_government_health_exppc_ppp + gdppc_ppp + gdp_adjusted_unemployment_rate + gdp_adjusted_urban_population_rate + gdp_adjusted_kcal_supply + gdp_adjusted_private_health_exppc_ppp:gdp_adjusted_government_health_exppc_ppp, index = c("country", "year"), model = "random", data = health_data_gdp_adjusted)
+summary(panel_lm_gdp_adjusted_hy_re_full)
+
+panel_lm_gdp_adjusted_dm_re_full <- plm(disease_mortality_rate ~ gdp_adjusted_private_health_exppc_ppp + gdp_adjusted_government_health_exppc_ppp + gdppc_ppp + gdp_adjusted_unemployment_rate + gdp_adjusted_urban_population_rate + gdp_adjusted_kcal_supply + gdp_adjusted_private_health_exppc_ppp:gdp_adjusted_government_health_exppc_ppp, index = c("country", "year"), model = "random", data = health_data_gdp_adjusted)
+summary(panel_lm_gdp_adjusted_dm_re_full)
+```
+
+### Run Wald Test for interaction term
+
+```{r}
+waldtest(panel_lm_gdp_adjusted_ob_re, panel_lm_gdp_adjusted_ob_re_full)
+waldtest(panel_lm_gdp_adjusted_hy_re, panel_lm_gdp_adjusted_hy_re_full)
+waldtest(panel_lm_gdp_adjusted_dm_re, panel_lm_gdp_adjusted_dm_re_full)
+```
+
+The Wald Test results for all models suggest the added interaction term does not significantly improve the model fit, and it can be dropped from our model.
+
+### End of model
+
+## EDA: NEEDS FIXING. CHART TITLES AND EVERYTHING SHOULD BE ADJUSTED, ENSURE CORRECT DATASET.
+
+### Exploratory charts with raw data
+
+#### Include chart of public v. private health expenditure
+
+### Exploratory charts after adjusting for GDP
+
+### Charts of results with statistical significance outlined
+
+```{r}
+hist(panel_lm_gdp_adjusted_ob_re$residuals)
+hist(panel_lm_gdp_adjusted_hy_re$residuals)
+hist(panel_lm_gdp_adjusted_dm_re$residuals)
+```
+
+#### Average % Health Care Privatized
+
+```{r}
+health_data |> 
+  mutate(percent_health_priv = private_health_exppc_ppp/current_health_exppc_ppp,
+         country = as.factor(country)) |>
+  group_by(country) |> 
+  summarise(mean_percent_healthcare_privatized = mean(percent_health_priv)) |> 
+  mutate(
+    country = fct_reorder(country, mean_percent_healthcare_privatized)
+  ) |> 
+  ggplot(aes(x = country, y = mean_percent_healthcare_privatized*100)) +
+  geom_bar(stat = "identity", fill = "skyblue", color = "black") +
+  geom_text(
+    aes(label = paste(round(mean_percent_healthcare_privatized, 2)*100, "%", sep = "")), 
+    vjust = -0.3,  # Position the text above the bars
+    size = 3  # Set text size to 3 (smaller than default)
+  ) +  labs(
+    title = "Average Percent of Total Health Expenditure Spent on Private Health Expenditure",
+    subtitle = "Other Expenditure Includes Government Health Expenditure and minimal External Health Expenditure",
+    x = "",
+    y = "Percent Privatized",
+    caption = "Data Source: World Bank Development Indicators Database\n Chart Design: Nicolo Pastrone"
+  ) +
+  theme_bw() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+```
+#### Disease Mortality Rate over Time
+```{r}
+#| eval: false
+health_data |> 
+  ggplot(aes(x = year, y = disease_mortality_rate, color = country)) +
+  geom_point() +
+  geom_line() +
+  scale_fill_viridis(option = "D") +
+  theme_bw() +
+  labs(title = "NCD Mortality Rate over Time", subtitle = "Percentage of Adults ages 30-70", x = "Year", y = "Mortality Rate (%)", caption = "Data Source: World Bank Health Nutrition and Population Statistics Database\n Chart Design: Nicolo Pastrone" ) +
+  theme(legend.title=element_blank())
+```
+```{r}
+health_data |> 
+  pivot_wider(names_from = "year", values_from = disease_mortality_rate) |> 
+  group_by(country) |> 
+  summarise(
+    mean_2016 = mean(`2016`, na.rm = TRUE),
+    mean_2003 = mean(`2003`, na.rm = TRUE),
+    change_in_dmr = mean_2016 - mean_2003
+  ) |> 
+  filter(change_in_dmr > 0)
+```
+
+#### Overweight over time
+
+```{r}
+#| eval: false
+health_data_gdp_adjusted |> 
+  ggplot(aes(x = year, y = overweight_rate, color = country)) +
+  geom_point() +
+  geom_line() +
+  scale_fill_viridis(option = "D") +
+  theme_bw() +
+  labs(title = "Overweight Rate over Time", subtitle = "Percentage of Adults with BMI > 25kg/m2", x = "Year", y = "Overweight Rate (%)", caption = "Data Source: World Bank Health Nutrition and Population Statistics Database\n Chart Design: Nicolo Pastrone" ) +
+  theme(legend.title=element_blank())
+```
+```{r}
+health_data |> 
+  pivot_wider(names_from = "year", values_from = overweight_rate) |> 
+  group_by(country) |> 
+  summarise(
+    mean_2016 = mean(`2016`, na.rm = TRUE),
+    mean_2003 = mean(`2003`, na.rm = TRUE),
+    change_in_overweight = mean_2016 - mean_2003
+  ) |> 
+  filter(change_in_overweight < 0)
+```
+
+
+#### Hypertension over Time
+
+```{r}
+health_data |> 
+  pivot_wider(names_from = "year", values_from = hypertension_rate) |> 
+  group_by(country) |> 
+  summarise(
+    mean_2016 = mean(`2016`, na.rm = TRUE),
+    mean_2003 = mean(`2003`, na.rm = TRUE),
+    change_in_hypertension = mean_2016 - mean_2003
+  ) |> 
+  filter(change_in_hypertension > 0) -> increase_in_hypertension
+
+health_data |> 
+  filter(country %in% increase_in_hypertension$country) |> 
+  ggplot(aes(x = year, y = hypertension_rate, color = country)) +
+  geom_point() +
+  geom_line() +
+  scale_fill_viridis(option = "D") +
+  theme_bw() +
+  labs(title = "Rise in Hypertension From 2003-2016", x = "Year", y = "Hypertension Rate (%)") +
+  theme(legend.title=element_blank(), legend.position = "bottom") -> rising_hypertension
+
+health_data |> 
+  filter(!country %in% increase_in_hypertension$country) |> 
+  ggplot(aes(x = year, y = hypertension_rate, color = country)) +
+  geom_point() +
+  geom_line() +
+  scale_fill_viridis(option = "D") +
+  theme_bw() +
+  labs(title = "Fall in Hypertension From 2003-2016", x = "Year", y = "Hypertension Rate (%)") +
+  theme(legend.title=element_blank(), legend.position = "bottom") -> falling_hypertension
+
+rising_hypertension + falling_hypertension +
+  plot_annotation(
+    title = "Hypertension Rate over Time",
+    subtitle = "Percentage of Adults ages 30-79",
+    caption = "Data Source: World Bank Health Nutrition and Population Statistics Database\n Chart Design: Nicolo Pastrone"
+    )
+
+
+```
+
+#### Government Health Expenditure over Time
+```{r}
+health_data |> 
+  pivot_wider(names_from = "year", values_from = government_health_exppc_ppp) |> 
+  group_by(country) |> 
+  summarise(
+    mean_2016 = mean(`2016`, na.rm = TRUE),
+    mean_2003 = mean(`2003`, na.rm = TRUE),
+    change_in_government_exp = mean_2016 - mean_2003
+  ) |> 
+  filter(change_in_government_exp < 0)
+
+health_data |> 
+  ggplot(aes(x = year, y = government_health_exppc_ppp, color = country)) +
+  geom_point() +
+  geom_line() +
+  scale_fill_viridis(option = "D") +
+  theme_bw() +
+  labs(title = "Per Capita Government Health Expenditure over Time", y = "Per capita Government Health Expenditure", x = "Year", caption = "Data Source: World Bank Health Nutrition and Population Statistics Database\n Chart Design: Nicolo Pastrone" ) +
+  theme(legend.title=element_blank())
+```
+#### Private Health Expenditure over Time
+```{r}
+health_data |> 
+  pivot_wider(names_from = "year", values_from = private_health_exppc_ppp) |> 
+  group_by(country) |> 
+  summarise(
+    mean_2016 = mean(`2016`, na.rm = TRUE),
+    mean_2003 = mean(`2003`, na.rm = TRUE),
+    change_in_private_exp = mean_2016 - mean_2003
+  ) |> 
+  filter(change_in_private_exp < 0)
+
+health_data |> 
+  ggplot(aes(x = year, y = private_health_exppc_ppp, color = country)) +
+  geom_point() +
+  geom_line() +
+  scale_fill_viridis(option = "D") +
+  theme_bw() +
+  labs(title = "Per Capita Private Health Expenditure over Time", y = "Private Health Expenditure", x = "Year", caption = "Data Source: World Bank Health Nutrition and Population Statistics Database\n Chart Design: Nicolo Pastrone" ) +
+  theme(legend.title=element_blank())
+```
+
+#### Health Expenditure v. Overweight Rate
+```{r, message=FALSE}
+health_data |> 
+  ggplot(aes(x = government_health_exppc_ppp, y = overweight_rate, color = country)) +
+  geom_point() +
+  geom_smooth(method = "lm", se = F, color = "red") +
+  scale_fill_viridis(option = "D") +
+  theme_bw() +
+  labs(title = "Per Capita Government Health Expenditure", x = "Per Capita Government Health Expenditure", y = "Overweight Rate (%)") +
+  theme(legend.title=element_blank(), legend.position = "none") -> government_exp_ob
+
+health_data |> 
+  ggplot(aes(x = private_health_exppc_ppp, y = overweight_rate, color = country)) +
+  geom_point() +
+  geom_smooth(method = "lm", se = F, color = "red") +
+  scale_fill_viridis(option = "D") +
+  theme_bw() +
+  labs(title = "Per Capita Private Health Expenditure", x = "Per Capita Private Health Expenditure", y = "Overweight Rate (%)") +
+  theme(legend.title=element_blank()) -> private_exp_ob
+
+government_exp_ob + private_exp_ob + 
+  plot_annotation(
+    title = "Per Capita Health Expenditure v. Overweight Rate",
+    caption = "Data Source: World Bank Health Nutrition and Population Statistics Database\n Chart Design: Nicolo Pastrone"
+  )
+```
+
+#### Health Expenditure v. Hypertension Rate
+```{r, message=FALSE}
+health_data |> 
+  ggplot(aes(x = government_health_exppc_ppp, y = hypertension_rate, color = country)) +
+  geom_point() +
+  geom_smooth(method = "lm", se = F, color = "red") +
+  scale_fill_viridis(option = "D") +
+  theme_bw() +
+  labs(title = "Per Capita Government Health Expenditure", x = "Per Capita Government Health Expenditure", y = "Hypertension Rate (%)") +
+  theme(legend.title=element_blank(), legend.position = "none") -> government_exp_ob
+
+health_data |> 
+  ggplot(aes(x = private_health_exppc_ppp, y = hypertension_rate, color = country)) +
+  geom_point() +
+  geom_smooth(method = "lm", se = F, color = "red") +
+  scale_fill_viridis(option = "D") +
+  theme_bw() +
+  labs(title = "Per Capita Private Health Expenditure", x = "Per Capita Private Health Expenditure", y = "Hypertension Rate (%)") +
+  theme(legend.title=element_blank()) -> private_exp_ob
+
+government_exp_ob + private_exp_ob + 
+  plot_annotation(
+    title = "Per Capita Health Expenditure v. Hypertension Rate",
+    caption = "Data Source: World Bank Health Nutrition and Population Statistics Database\n Chart Design: Nicolo Pastrone"
+  )
+```
+
+#### Health Expenditure v. Hypertension Rate
+```{r, message=FALSE}
+health_data |> 
+  ggplot(aes(x = government_health_exppc_ppp, y = disease_mortality_rate, color = country)) +
+  geom_point() +
+  geom_smooth(method = "lm", se = F, color = "red") +
+  scale_fill_viridis(option = "D") +
+  theme_bw() +
+  labs(title = "Per Capita Government Health Expenditure", x = "Per Capita Government Health Expenditure", y = "NCD Mortality Rate (%)") +
+  theme(legend.title=element_blank(), legend.position = "none") -> government_exp_ob
+
+health_data |> 
+  ggplot(aes(x = private_health_exppc_ppp, y = disease_mortality_rate, color = country)) +
+  geom_point() +
+  geom_smooth(method = "lm", se = F, color = "red") +
+  scale_fill_viridis(option = "D") +
+  theme_bw() +
+  labs(title = "Per Capita Private Health Expenditure", x = "Per Capita Private Health Expenditure", y = "NCD Mortality Rate (%)") +
+  theme(legend.title=element_blank()) -> private_exp_ob
+
+government_exp_ob + private_exp_ob + 
+  plot_annotation(
+    title = "Per Capita Health Expenditure v. NCD Mortality Rate",
+    caption = "Data Source: World Bank Health Nutrition and Population Statistics Database\n Chart Design: Nicolo Pastrone"
+  )
+```
+
+## Test Heteroskedasticity: Brown-Forsythe test
+
+```{r}
+#| eval: false
+# Load required libraries
+library(onewaytests)
+library(dplyr)
+
+# Step 1: Prepare the data
+# We'll use the residuals from your original model to check for homoscedasticity
+
+# First, run your original model
+# Extract residuals
+residuals_ob <- residuals(panel_lm_gdp_adjusted_ob_re)
+
+# Create a data frame with residuals and country
+data_for_test_ob <- data.frame(
+  residuals = residuals_ob,
+  country = health_data_gdp_adjusted$country
+)
+
+# Step 2: Perform Brown-Forsythe test
+bf_test_ob <- bf.test(residuals_ob ~ country, data = data_for_test_ob)
+
+residuals_hy <- residuals(panel_lm_gdp_adjusted_hy_re)
+
+# Create a data frame with residuals and country
+data_for_test_hy <- data.frame(
+  residuals = residuals_hy,
+  country = health_data_gdp_adjusted$country
+)
+
+# Step 2: Perform Brown-Forsythe test
+bf_test_hy <- bf.test(residuals_hy ~ country, data = data_for_test_hy)
+
+residuals_dm <- residuals(panel_lm_gdp_adjusted_dm_re)
+
+# Create a data frame with residuals and country
+data_for_test_dm <- data.frame(
+  residuals = residuals_dm,
+  country = health_data_gdp_adjusted$country
+)
+
+# Step 2: Perform Brown-Forsythe test
+bf_test_dm <- bf.test(residuals_dm ~ country, data = data_for_test_dm)
+
+# Step 3: Print the results
+print(bf_test_ob)
+print(bf_test_hy)
+print(bf_test_dm)
+
+
+
+# Step 4: Interpret the results
+cat("\nInterpretation:\n")
+if (bf_test$p.value < 0.05) {
+  cat("The Brown-Forsythe test is significant (p < 0.05).\n")
+  cat("This suggests that the variances are not equal across countries.\n")
+  cat("You may need to consider robust standard errors or alternative modeling approaches.\n")
+} else {
+  cat("The Brown-Forsythe test is not significant (p >= 0.05).\n")
+  cat("This suggests that the variances are approximately equal across countries.\n")
+  cat("The assumption of homoscedasticity for your panel data model may be reasonable.\n")
+}
+```
+
+### Result: Heteroskedasticity is not an issue in our model
+
+### Tests for normality of residuals and independence of residuals not necessary. Our model assumes non-constant variance and dependent variables.
+
+## Check if predictions fall outside of the proper range
+
+```{r}
+#| eval: false
+predictions <- predict(panel_lm_gdp_adjusted_ob_re)
+
+# Check if predictions go out of bounds
+summary(predictions)
+any(predictions < 0 | predictions > 100)
+
+```

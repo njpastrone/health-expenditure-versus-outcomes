@@ -1,0 +1,1701 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.3.433">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>Restructured Statistical Analysis</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="Restructured Statistical Analysis_files/libs/clipboard/clipboard.min.js"></script>
+<script src="Restructured Statistical Analysis_files/libs/quarto-html/quarto.js"></script>
+<script src="Restructured Statistical Analysis_files/libs/quarto-html/popper.min.js"></script>
+<script src="Restructured Statistical Analysis_files/libs/quarto-html/tippy.umd.min.js"></script>
+<script src="Restructured Statistical Analysis_files/libs/quarto-html/anchor.min.js"></script>
+<link href="Restructured Statistical Analysis_files/libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="Restructured Statistical Analysis_files/libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="Restructured Statistical Analysis_files/libs/bootstrap/bootstrap.min.js"></script>
+<link href="Restructured Statistical Analysis_files/libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="Restructured Statistical Analysis_files/libs/bootstrap/bootstrap.min.css" rel="stylesheet" id="quarto-bootstrap" data-mode="light">
+
+
+</head>
+
+<body class="fullcontent">
+
+<div id="quarto-content" class="page-columns page-rows-contents page-layout-article">
+
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">Restructured Statistical Analysis</h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+</header>
+
+<section id="purpose-restructure-statistical-analysis-to-adjust-for-multicollinearity-before-taking-logarithms" class="level2">
+<h2 class="anchored" data-anchor-id="purpose-restructure-statistical-analysis-to-adjust-for-multicollinearity-before-taking-logarithms">Purpose: Restructure Statistical Analysis to adjust for multicollinearity before taking logarithms</h2>
+</section>
+<section id="load-libraries-and-data" class="level2">
+<h2 class="anchored" data-anchor-id="load-libraries-and-data">Load libraries and data</h2>
+<div class="cell" data-show="false">
+<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tidyverse)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>── Attaching core tidyverse packages ──────────────────────── tidyverse 2.0.0 ──
+✔ dplyr     1.1.4     ✔ readr     2.1.5
+✔ forcats   1.0.0     ✔ stringr   1.5.1
+✔ ggplot2   3.5.1     ✔ tibble    3.2.1
+✔ lubridate 1.9.3     ✔ tidyr     1.3.1
+✔ purrr     1.0.2     
+── Conflicts ────────────────────────────────────────── tidyverse_conflicts() ──
+✖ dplyr::filter() masks stats::filter()
+✖ dplyr::lag()    masks stats::lag()
+ℹ Use the conflicted package (&lt;http://conflicted.r-lib.org/&gt;) to force all conflicts to become errors</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(plm)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>
+Attaching package: 'plm'
+
+The following objects are masked from 'package:dplyr':
+
+    between, lag, lead</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(car)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Loading required package: carData
+
+Attaching package: 'car'
+
+The following object is masked from 'package:dplyr':
+
+    recode
+
+The following object is masked from 'package:purrr':
+
+    some</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(pglm)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Loading required package: maxLik
+Loading required package: miscTools
+
+Please cite the 'maxLik' package as:
+Henningsen, Arne and Toomet, Ott (2011). maxLik: A package for maximum likelihood estimation in R. Computational Statistics 26(3), 443-458. DOI 10.1007/s00180-010-0217-1.
+
+If you have questions, suggestions, or comments regarding the 'maxLik' package, please use a forum or 'tracker' at maxLik's R-Forge site:
+https://r-forge.r-project.org/projects/maxlik/</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(censReg)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>
+Please cite the 'censReg' package as:
+Henningsen, Arne (2017). censReg: Censored Regression (Tobit) Models. R package version 0.5. http://CRAN.R-Project.org/package=censReg.
+
+If you have questions, suggestions, or comments regarding the 'censReg' package, please use a forum or 'tracker' at the R-Forge site of the 'sampleSelection' project:
+https://r-forge.r-project.org/projects/sampleselection/</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(patchwork)</span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(viridis)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Loading required package: viridisLite</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(reshape2)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>
+Attaching package: 'reshape2'
+
+The following object is masked from 'package:tidyr':
+
+    smiths</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb15"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(lmtest)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Loading required package: zoo
+
+Attaching package: 'zoo'
+
+The following objects are masked from 'package:base':
+
+    as.Date, as.Date.numeric</code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb17"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="fu">read_csv</span>(<span class="st">"../Data/cleaned_full_dataset.csv"</span>) <span class="ot">-&gt;</span> health_data</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Rows: 322 Columns: 16
+── Column specification ────────────────────────────────────────────────────────
+Delimiter: ","
+chr  (2): country, country_code
+dbl (14): year, current_health_exppc_ppp, government_health_exppc_ppp, priva...
+
+ℹ Use `spec()` to retrieve the full column specification for this data.
+ℹ Specify the column types or set `show_col_types = FALSE` to quiet this message.</code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb19"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="fu">glimpse</span>(health_data)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Rows: 322
+Columns: 16
+$ country                     &lt;chr&gt; "Australia", "Australia", "Australia", "Au…
+$ country_code                &lt;chr&gt; "AUS", "AUS", "AUS", "AUS", "AUS", "AUS", …
+$ year                        &lt;dbl&gt; 2003, 2004, 2005, 2006, 2007, 2008, 2009, …
+$ current_health_exppc_ppp    &lt;dbl&gt; 2555.543, 2750.678, 2842.851, 3024.017, 31…
+$ government_health_exppc_ppp &lt;dbl&gt; 1823.157, 1971.881, 2042.233, 2167.202, 23…
+$ private_health_exppc_ppp    &lt;dbl&gt; 732.3866, 778.7965, 800.6182, 856.8156, 86…
+$ external_health_exppc_ppp   &lt;dbl&gt; 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, …
+$ urban_population            &lt;dbl&gt; 84.343, 84.463, 84.582, 84.700, 84.822, 84…
+$ gdppc_ppp                   &lt;dbl&gt; 30121.82, 31763.80, 33036.58, 34846.72, 36…
+$ unemployment_rate           &lt;dbl&gt; 5.933, 5.399, 5.036, 4.785, 4.381, 4.242, …
+$ obesity_rate                &lt;dbl&gt; 58.1, 58.6, 59.2, 59.7, 60.2, 60.7, 61.2, …
+$ hypertension_rate           &lt;dbl&gt; 30.0, 29.9, 29.7, 29.7, 29.6, 29.5, 29.5, …
+$ disease_mortality_rate      &lt;dbl&gt; 11.8, 11.5, 11.4, 10.9, 10.6, 10.5, 10.1, …
+$ kcal_per_capita             &lt;dbl&gt; 3144.023, 3096.871, 3152.658, 3217.521, 32…
+$ protein_per_capita_g        &lt;dbl&gt; 111.0537, 102.9923, 106.7265, 106.6390, 11…
+$ fat_per_capita_g            &lt;dbl&gt; 132.6790, 135.9802, 139.6366, 146.2157, 14…</code></pre>
+</div>
+</div>
+</section>
+<section id="descriptive-statistics" class="level2">
+<h2 class="anchored" data-anchor-id="descriptive-statistics">Descriptive Statistics</h2>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb21"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(health_data)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>   country          country_code            year      current_health_exppc_ppp
+ Length:322         Length:322         Min.   :2003   Min.   : 638.4          
+ Class :character   Class :character   1st Qu.:2006   1st Qu.:2009.2          
+ Mode  :character   Mode  :character   Median :2010   Median :3001.0          
+                                       Mean   :2010   Mean   :3232.7          
+                                       3rd Qu.:2013   3rd Qu.:4231.2          
+                                       Max.   :2016   Max.   :9599.9          
+ government_health_exppc_ppp private_health_exppc_ppp external_health_exppc_ppp
+ Min.   : 357.9              Min.   : 159.6           Min.   : 0.000           
+ 1st Qu.:1191.9              1st Qu.: 594.2           1st Qu.: 0.000           
+ Median :2141.4              Median : 792.0           Median : 0.000           
+ Mean   :2182.1              Mean   :1047.4           Mean   : 3.100           
+ 3rd Qu.:3052.5              3rd Qu.:1075.5           3rd Qu.: 1.695           
+ Max.   :5354.0              Max.   :4942.8           Max.   :41.000           
+ urban_population   gdppc_ppp     unemployment_rate  obesity_rate  
+ Min.   :53.25    Min.   : 9362   Min.   : 2.251    Min.   :21.80  
+ 1st Qu.:67.98    1st Qu.:27908   1st Qu.: 4.506    1st Qu.:52.50  
+ Median :80.21    Median :34838   Median : 5.989    Median :56.15  
+ Mean   :77.41    Mean   :35734   Mean   : 6.931    Mean   :53.72  
+ 3rd Qu.:85.39    3rd Qu.:42446   3rd Qu.: 8.060    3rd Qu.:59.17  
+ Max.   :97.92    Max.   :67378   Max.   :27.686    Max.   :67.90  
+ hypertension_rate disease_mortality_rate kcal_per_capita protein_per_capita_g
+ Min.   :22.90     Min.   : 8.20          Min.   :2291    Min.   : 64.97      
+ 1st Qu.:31.32     1st Qu.:10.72          1st Qu.:3187    1st Qu.: 96.72      
+ Median :34.50     Median :12.20          Median :3358    Median :106.00      
+ Mean   :34.97     Mean   :13.45          Mean   :3307    Mean   :105.56      
+ 3rd Qu.:38.90     3rd Qu.:14.20          3rd Qu.:3523    3rd Qu.:115.19      
+ Max.   :52.50     Max.   :26.60          Max.   :3845    Max.   :143.37      
+ fat_per_capita_g
+ Min.   : 60.55  
+ 1st Qu.:104.09  
+ Median :136.18  
+ Mean   :129.76  
+ 3rd Qu.:150.98  
+ Max.   :177.66  </code></pre>
+</div>
+</div>
+</section>
+<section id="preliminary-model" class="level2">
+<h2 class="anchored" data-anchor-id="preliminary-model">Preliminary Model</h2>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb23"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a>panel_lm_raw_data_ob <span class="ot">&lt;-</span> <span class="fu">plm</span>(obesity_rate <span class="sc">~</span> private_health_exppc_ppp <span class="sc">+</span> government_health_exppc_ppp <span class="sc">+</span> gdppc_ppp <span class="sc">+</span> unemployment_rate <span class="sc">+</span> urban_population <span class="sc">+</span> kcal_per_capita, <span class="at">index =</span> <span class="fu">c</span>(<span class="st">"country"</span>, <span class="st">"year"</span>), <span class="at">model =</span> <span class="st">"within"</span>, <span class="at">data =</span> health_data)</span>
+<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(panel_lm_raw_data_ob)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Oneway (individual) effect Within Model
+
+Call:
+plm(formula = obesity_rate ~ private_health_exppc_ppp + government_health_exppc_ppp + 
+    gdppc_ppp + unemployment_rate + urban_population + kcal_per_capita, 
+    data = health_data, model = "within", index = c("country", 
+        "year"))
+
+Balanced Panel: n = 23, T = 14, N = 322
+
+Residuals:
+      Min.    1st Qu.     Median    3rd Qu.       Max. 
+-3.1523719 -0.4040478  0.0037509  0.3383788  4.1338438 
+
+Coefficients:
+                              Estimate Std. Error t-value  Pr(&gt;|t|)    
+private_health_exppc_ppp    1.1347e-03 3.5076e-04  3.2349  0.001356 ** 
+government_health_exppc_ppp 8.2787e-04 2.0461e-04  4.0462 6.665e-05 ***
+gdppc_ppp                   1.2829e-04 2.1982e-05  5.8360 1.416e-08 ***
+unemployment_rate           1.0120e-01 1.7470e-02  5.7928 1.784e-08 ***
+urban_population            3.7627e-01 4.3753e-02  8.5999 4.898e-16 ***
+kcal_per_capita             4.1823e-03 5.1281e-04  8.1556 1.028e-14 ***
+---
+Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+
+Total Sum of Squares:    1072.9
+Residual Sum of Squares: 167.31
+R-Squared:      0.84405
+Adj. R-Squared: 0.82915
+F-statistic: 264.311 on 6 and 293 DF, p-value: &lt; 2.22e-16</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb25"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a>panel_lm_raw_data_hy <span class="ot">&lt;-</span> <span class="fu">plm</span>(hypertension_rate <span class="sc">~</span> private_health_exppc_ppp <span class="sc">+</span> government_health_exppc_ppp <span class="sc">+</span> gdppc_ppp <span class="sc">+</span> unemployment_rate <span class="sc">+</span> urban_population <span class="sc">+</span> kcal_per_capita, <span class="at">index =</span> <span class="fu">c</span>(<span class="st">"country"</span>, <span class="st">"year"</span>), <span class="at">model =</span> <span class="st">"within"</span>, <span class="at">data =</span> health_data)</span>
+<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(panel_lm_raw_data_hy)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Oneway (individual) effect Within Model
+
+Call:
+plm(formula = hypertension_rate ~ private_health_exppc_ppp + 
+    government_health_exppc_ppp + gdppc_ppp + unemployment_rate + 
+    urban_population + kcal_per_capita, data = health_data, model = "within", 
+    index = c("country", "year"))
+
+Balanced Panel: n = 23, T = 14, N = 322
+
+Residuals:
+     Min.   1st Qu.    Median   3rd Qu.      Max. 
+-2.337579 -0.471569  0.088011  0.499604  1.796456 
+
+Coefficients:
+                               Estimate  Std. Error  t-value  Pr(&gt;|t|)    
+private_health_exppc_ppp    -4.0782e-05  3.4105e-04  -0.1196 0.9048992    
+government_health_exppc_ppp -2.5242e-04  1.9894e-04  -1.2688 0.2055105    
+gdppc_ppp                   -1.6481e-04  2.1374e-05  -7.7108 1.962e-13 ***
+unemployment_rate           -1.7977e-01  1.6986e-02 -10.5830 &lt; 2.2e-16 ***
+urban_population             1.1117e-04  4.2542e-02   0.0026 0.9979168    
+kcal_per_capita              1.8589e-03  4.9862e-04   3.7281 0.0002315 ***
+---
+Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+
+Total Sum of Squares:    487.52
+Residual Sum of Squares: 158.18
+R-Squared:      0.67554
+Adj. R-Squared: 0.64453
+F-statistic: 101.673 on 6 and 293 DF, p-value: &lt; 2.22e-16</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb27"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a>panel_lm_raw_data_dm <span class="ot">&lt;-</span> <span class="fu">plm</span>(disease_mortality_rate <span class="sc">~</span> private_health_exppc_ppp <span class="sc">+</span> government_health_exppc_ppp <span class="sc">+</span> gdppc_ppp <span class="sc">+</span> unemployment_rate <span class="sc">+</span> urban_population <span class="sc">+</span> kcal_per_capita, <span class="at">index =</span> <span class="fu">c</span>(<span class="st">"country"</span>, <span class="st">"year"</span>), <span class="at">model =</span> <span class="st">"within"</span>, <span class="at">data =</span> health_data)</span>
+<span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(panel_lm_raw_data_dm)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Oneway (individual) effect Within Model
+
+Call:
+plm(formula = disease_mortality_rate ~ private_health_exppc_ppp + 
+    government_health_exppc_ppp + gdppc_ppp + unemployment_rate + 
+    urban_population + kcal_per_capita, data = health_data, model = "within", 
+    index = c("country", "year"))
+
+Balanced Panel: n = 23, T = 14, N = 322
+
+Residuals:
+     Min.   1st Qu.    Median   3rd Qu.      Max. 
+-3.290770 -0.406381 -0.018967  0.374604  2.927297 
+
+Coefficients:
+                               Estimate  Std. Error t-value  Pr(&gt;|t|)    
+private_health_exppc_ppp     3.8487e-04  3.8938e-04  0.9884 0.3237730    
+government_health_exppc_ppp -5.7103e-04  2.2713e-04 -2.5141 0.0124710 *  
+gdppc_ppp                   -1.7142e-04  2.4403e-05 -7.0246 1.505e-11 ***
+unemployment_rate           -9.6680e-02  1.9394e-02 -4.9851 1.061e-06 ***
+urban_population             6.2379e-02  4.8571e-02  1.2843 0.2000525    
+kcal_per_capita             -1.9462e-03  5.6928e-04 -3.4187 0.0007184 ***
+---
+Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+
+Total Sum of Squares:    600.48
+Residual Sum of Squares: 206.19
+R-Squared:      0.65663
+Adj. R-Squared: 0.62381
+F-statistic: 93.3839 on 6 and 293 DF, p-value: &lt; 2.22e-16</code></pre>
+</div>
+</div>
+</section>
+<section id="check-for-multicollinearity-in-model" class="level2">
+<h2 class="anchored" data-anchor-id="check-for-multicollinearity-in-model">Check for multicollinearity in model</h2>
+<section id="make-panel-dataframe-pooling-model-to-test-vif---only-necessary-for-13-models-because-vif-is-dependent-on-the-relationship-among-predictors-which-are-equivalent-in-all-models" class="level3">
+<h3 class="anchored" data-anchor-id="make-panel-dataframe-pooling-model-to-test-vif---only-necessary-for-13-models-because-vif-is-dependent-on-the-relationship-among-predictors-which-are-equivalent-in-all-models">Make panel dataframe, pooling model to test vif - only necessary for 1/3 models because vif is dependent on the relationship among predictors, which are equivalent in all models</h3>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb29"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a>panel_health_data <span class="ot">&lt;-</span> <span class="fu">pdata.frame</span>(health_data, <span class="at">index =</span> <span class="fu">c</span>(<span class="st">"country"</span>, <span class="st">"year"</span>))</span>
+<span id="cb29-2"><a href="#cb29-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb29-3"><a href="#cb29-3" aria-hidden="true" tabindex="-1"></a>pooling_model_ob <span class="ot">&lt;-</span> <span class="fu">plm</span>(obesity_rate <span class="sc">~</span> private_health_exppc_ppp <span class="sc">+</span> government_health_exppc_ppp <span class="sc">+</span> gdppc_ppp <span class="sc">+</span> unemployment_rate <span class="sc">+</span> urban_population <span class="sc">+</span> kcal_per_capita, <span class="at">data =</span> panel_health_data, <span class="at">model =</span> <span class="st">"pooling"</span>)</span>
+<span id="cb29-4"><a href="#cb29-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb29-5"><a href="#cb29-5" aria-hidden="true" tabindex="-1"></a><span class="fu">vif</span>(pooling_model_ob)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>   private_health_exppc_ppp government_health_exppc_ppp 
+                   2.183233                    4.767139 
+                  gdppc_ppp           unemployment_rate 
+                   6.633707                    1.309776 
+           urban_population             kcal_per_capita 
+                   1.365895                    1.535504 </code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb31"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a>panel_health_data <span class="sc">|&gt;</span> </span>
+<span id="cb31-2"><a href="#cb31-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(private_health_exppc_ppp, government_health_exppc_ppp, gdppc_ppp, unemployment_rate, urban_population, kcal_per_capita) <span class="sc">|&gt;</span> <span class="fu">cor</span>() <span class="ot">-&gt;</span> prelim_cor_matrix</span>
+<span id="cb31-3"><a href="#cb31-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb31-4"><a href="#cb31-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Reshape the correlation matrix into long format</span></span>
+<span id="cb31-5"><a href="#cb31-5" aria-hidden="true" tabindex="-1"></a>cor_matrix_melted <span class="ot">&lt;-</span> <span class="fu">melt</span>(prelim_cor_matrix)</span>
+<span id="cb31-6"><a href="#cb31-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb31-7"><a href="#cb31-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Create the correlation matrix plot</span></span>
+<span id="cb31-8"><a href="#cb31-8" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(cor_matrix_melted, <span class="fu">aes</span>(Var1, Var2, <span class="at">fill =</span> value)) <span class="sc">+</span></span>
+<span id="cb31-9"><a href="#cb31-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_tile</span>() <span class="sc">+</span></span>
+<span id="cb31-10"><a href="#cb31-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_text</span>(<span class="fu">aes</span>(<span class="at">label =</span> <span class="fu">round</span>(value, <span class="dv">2</span>)), <span class="at">color =</span> <span class="st">"red"</span>, <span class="at">size =</span> <span class="dv">3</span>) <span class="sc">+</span>  <span class="co"># Add correlation values</span></span>
+<span id="cb31-11"><a href="#cb31-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_fill_gradient2</span>(<span class="at">low =</span> <span class="st">"red"</span>, <span class="at">high =</span> <span class="st">"blue"</span>, <span class="at">mid =</span> <span class="st">"white"</span>, <span class="at">midpoint =</span> <span class="dv">0</span>) <span class="sc">+</span></span>
+<span id="cb31-12"><a href="#cb31-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_minimal</span>() <span class="sc">+</span></span>
+<span id="cb31-13"><a href="#cb31-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">title =</span> <span class="st">"Correlation Matrix: Preliminary Model Predictors"</span>, <span class="at">x =</span> <span class="st">""</span>, <span class="at">y =</span> <span class="st">""</span>) <span class="sc">+</span></span>
+<span id="cb31-14"><a href="#cb31-14" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme</span>(<span class="at">axis.text.x =</span> <span class="fu">element_text</span>(<span class="at">angle =</span> <span class="dv">45</span>, <span class="at">hjust =</span> <span class="dv">1</span>)) <span class="sc">+</span></span>
+<span id="cb31-15"><a href="#cb31-15" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_fill_viridis</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Scale for fill is already present.
+Adding another scale for fill, which will replace the existing scale.</code></pre>
+</div>
+<div class="cell-output-display">
+<p><img src="Restructured-Statistical-Analysis_files/figure-html/unnamed-chunk-7-1.png" class="img-fluid" width="672"></p>
+</div>
+</div>
+<p>We observe strong multicollinearity between GDP and our other variables. We will adjust our model to account for this multicollinearity by running bivariate regressions between GDP and each other predictor, then using GDP and the residuals of those bivariate regressions as our new set of predictors.</p>
+</section>
+</section>
+<section id="fix-multicollinearity" class="level2">
+<h2 class="anchored" data-anchor-id="fix-multicollinearity">Fix multicollinearity</h2>
+<section id="preferred-method-use-bivariate-regressions-for-each-predictor-on-gdp-keep-residuals" class="level3">
+<h3 class="anchored" data-anchor-id="preferred-method-use-bivariate-regressions-for-each-predictor-on-gdp-keep-residuals">Preferred method: Use bivariate regressions for each predictor on GDP, keep residuals</h3>
+<p>We are asking the question – What amount of health expenditure, unemployment, urban population, and calorie supply is not explained by GDP?</p>
+<section id="run-bivariate-regressions-on-gdp" class="level4">
+<h4 class="anchored" data-anchor-id="run-bivariate-regressions-on-gdp">Run bivariate regressions on GDP</h4>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb33"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a>br_pri_gdp <span class="ot">&lt;-</span> <span class="fu">plm</span>(private_health_exppc_ppp <span class="sc">~</span> gdppc_ppp, <span class="at">index =</span> <span class="fu">c</span>(<span class="st">"country"</span>, <span class="st">"year"</span>), <span class="at">model =</span> <span class="st">"within"</span>, <span class="at">data =</span> health_data)</span>
+<span id="cb33-2"><a href="#cb33-2" aria-hidden="true" tabindex="-1"></a>br_pub_gdp <span class="ot">&lt;-</span> <span class="fu">plm</span>(government_health_exppc_ppp <span class="sc">~</span> gdppc_ppp, <span class="at">index =</span> <span class="fu">c</span>(<span class="st">"country"</span>, <span class="st">"year"</span>), <span class="at">model =</span> <span class="st">"within"</span>, <span class="at">data =</span> health_data)</span>
+<span id="cb33-3"><a href="#cb33-3" aria-hidden="true" tabindex="-1"></a>br_unemp_gdp <span class="ot">&lt;-</span> <span class="fu">plm</span>(unemployment_rate <span class="sc">~</span> gdppc_ppp, <span class="at">index =</span> <span class="fu">c</span>(<span class="st">"country"</span>, <span class="st">"year"</span>), <span class="at">model =</span> <span class="st">"within"</span>, <span class="at">data =</span> health_data)                </span>
+<span id="cb33-4"><a href="#cb33-4" aria-hidden="true" tabindex="-1"></a>br_urban_gdp <span class="ot">&lt;-</span> <span class="fu">plm</span>(urban_population <span class="sc">~</span> gdppc_ppp, <span class="at">index =</span> <span class="fu">c</span>(<span class="st">"country"</span>, <span class="st">"year"</span>), <span class="at">model =</span> <span class="st">"within"</span>, <span class="at">data =</span> health_data)</span>
+<span id="cb33-5"><a href="#cb33-5" aria-hidden="true" tabindex="-1"></a>br_kcal_gdp <span class="ot">&lt;-</span> <span class="fu">plm</span>(kcal_per_capita <span class="sc">~</span> gdppc_ppp, <span class="at">index =</span> <span class="fu">c</span>(<span class="st">"country"</span>, <span class="st">"year"</span>), <span class="at">model =</span> <span class="st">"within"</span>, <span class="at">data =</span> health_data)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="collect-residuals-to-form-adjusted-predictors" class="level4">
+<h4 class="anchored" data-anchor-id="collect-residuals-to-form-adjusted-predictors">Collect residuals to form adjusted predictors</h4>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb34"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb34-1"><a href="#cb34-1" aria-hidden="true" tabindex="-1"></a>health_data_gdp_adjusted <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(</span>
+<span id="cb34-2"><a href="#cb34-2" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb34-3"><a href="#cb34-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">country =</span> health_data<span class="sc">$</span>country,</span>
+<span id="cb34-4"><a href="#cb34-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">year =</span> health_data<span class="sc">$</span>year,</span>
+<span id="cb34-5"><a href="#cb34-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">gdp_adjusted_private_health_exppc_ppp =</span> br_pri_gdp<span class="sc">$</span>residuals,</span>
+<span id="cb34-6"><a href="#cb34-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">gdp_adjusted_government_health_exppc_ppp =</span> br_pub_gdp<span class="sc">$</span>residuals,</span>
+<span id="cb34-7"><a href="#cb34-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">gdppc_ppp =</span> health_data<span class="sc">$</span>gdppc_ppp,</span>
+<span id="cb34-8"><a href="#cb34-8" aria-hidden="true" tabindex="-1"></a>  <span class="at">gdp_adjusted_unemployment_rate =</span> br_unemp_gdp<span class="sc">$</span>residuals,</span>
+<span id="cb34-9"><a href="#cb34-9" aria-hidden="true" tabindex="-1"></a>  <span class="at">gdp_adjusted_urban_population_rate =</span> br_urban_gdp<span class="sc">$</span>residuals,</span>
+<span id="cb34-10"><a href="#cb34-10" aria-hidden="true" tabindex="-1"></a>  <span class="at">gdp_adjusted_kcal_supply =</span> br_kcal_gdp<span class="sc">$</span>residuals,</span>
+<span id="cb34-11"><a href="#cb34-11" aria-hidden="true" tabindex="-1"></a>  <span class="at">obesity_rate =</span> health_data<span class="sc">$</span>obesity_rate,</span>
+<span id="cb34-12"><a href="#cb34-12" aria-hidden="true" tabindex="-1"></a>  <span class="at">hypertension_rate =</span> health_data<span class="sc">$</span>hypertension_rate,</span>
+<span id="cb34-13"><a href="#cb34-13" aria-hidden="true" tabindex="-1"></a>  <span class="at">disease_mortality_rate =</span> health_data<span class="sc">$</span>disease_mortality_rate</span>
+<span id="cb34-14"><a href="#cb34-14" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+</section>
+</section>
+<section id="new-model-with-gdp-adjusted-variables" class="level2">
+<h2 class="anchored" data-anchor-id="new-model-with-gdp-adjusted-variables">New Model with GDP-adjusted variables</h2>
+<section id="descriptive-statistics-1" class="level3">
+<h3 class="anchored" data-anchor-id="descriptive-statistics-1">Descriptive Statistics</h3>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb35"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a>health_data_gdp_adjusted <span class="sc">|&gt;</span> </span>
+<span id="cb35-2"><a href="#cb35-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summary</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>   country               year      gdp_adjusted_private_health_exppc_ppp
+ Length:322         Min.   :2003   total       :4.924e+06               
+ Class :character   1st Qu.:2006   between_id  :1.224e-23               
+ Mode  :character   Median :2010   between_time:2.262e+05               
+                    Mean   :2010                                        
+                    3rd Qu.:2013                                        
+                    Max.   :2016                                        
+ gdp_adjusted_government_health_exppc_ppp   gdppc_ppp    
+ total       :1.559e+07                   Min.   : 9362  
+ between_id  :5.752e-23                   1st Qu.:27908  
+ between_time:1.971e+06                   Median :34838  
+                                          Mean   :35734  
+                                          3rd Qu.:42446  
+                                          Max.   :67378  
+ gdp_adjusted_unemployment_rate gdp_adjusted_urban_population_rate
+ total       :2.150e+03         total       :3.793e+02            
+ between_id  :1.916e-28         between_id  :3.109e-26            
+ between_time:3.272e+02         between_time:1.336e+01            
+                                                                  
+                                                                  
+                                                                  
+ gdp_adjusted_kcal_supply  obesity_rate   hypertension_rate
+ total       :2.397e+06   Min.   :21.80   Min.   :22.90    
+ between_id  :3.324e-23   1st Qu.:52.50   1st Qu.:31.32    
+ between_time:8.682e+04   Median :56.15   Median :34.50    
+                          Mean   :53.72   Mean   :34.97    
+                          3rd Qu.:59.17   3rd Qu.:38.90    
+                          Max.   :67.90   Max.   :52.50    
+ disease_mortality_rate
+ Min.   : 8.20         
+ 1st Qu.:10.72         
+ Median :12.20         
+ Mean   :13.45         
+ 3rd Qu.:14.20         
+ Max.   :26.60         </code></pre>
+</div>
+</div>
+</section>
+<section id="fixed-effects" class="level3">
+<h3 class="anchored" data-anchor-id="fixed-effects">Fixed Effects</h3>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb37"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb37-1"><a href="#cb37-1" aria-hidden="true" tabindex="-1"></a>panel_lm_gdp_adjusted_ob_fe <span class="ot">&lt;-</span> <span class="fu">plm</span>(obesity_rate <span class="sc">~</span> gdp_adjusted_private_health_exppc_ppp <span class="sc">+</span> gdp_adjusted_government_health_exppc_ppp <span class="sc">+</span> gdppc_ppp <span class="sc">+</span> gdp_adjusted_unemployment_rate <span class="sc">+</span> gdp_adjusted_urban_population_rate <span class="sc">+</span> gdp_adjusted_kcal_supply, <span class="at">index =</span> <span class="fu">c</span>(<span class="st">"country"</span>, <span class="st">"year"</span>), <span class="at">model =</span> <span class="st">"within"</span>, <span class="at">data =</span> health_data_gdp_adjusted)</span>
+<span id="cb37-2"><a href="#cb37-2" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(panel_lm_gdp_adjusted_ob_fe)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Oneway (individual) effect Within Model
+
+Call:
+plm(formula = obesity_rate ~ gdp_adjusted_private_health_exppc_ppp + 
+    gdp_adjusted_government_health_exppc_ppp + gdppc_ppp + gdp_adjusted_unemployment_rate + 
+    gdp_adjusted_urban_population_rate + gdp_adjusted_kcal_supply, 
+    data = health_data_gdp_adjusted, model = "within", index = c("country", 
+        "year"))
+
+Balanced Panel: n = 23, T = 14, N = 322
+
+Residuals:
+      Min.    1st Qu.     Median    3rd Qu.       Max. 
+-3.1523719 -0.4040478  0.0037509  0.3383788  4.1338438 
+
+Coefficients:
+                                           Estimate Std. Error t-value
+gdp_adjusted_private_health_exppc_ppp    1.1347e-03 3.5076e-04  3.2349
+gdp_adjusted_government_health_exppc_ppp 8.2787e-04 2.0461e-04  4.0462
+gdppc_ppp                                2.9388e-04 8.0098e-06 36.6905
+gdp_adjusted_unemployment_rate           1.0120e-01 1.7470e-02  5.7928
+gdp_adjusted_urban_population_rate       3.7627e-01 4.3753e-02  8.5999
+gdp_adjusted_kcal_supply                 4.1823e-03 5.1281e-04  8.1556
+                                          Pr(&gt;|t|)    
+gdp_adjusted_private_health_exppc_ppp     0.001356 ** 
+gdp_adjusted_government_health_exppc_ppp 6.665e-05 ***
+gdppc_ppp                                &lt; 2.2e-16 ***
+gdp_adjusted_unemployment_rate           1.784e-08 ***
+gdp_adjusted_urban_population_rate       4.898e-16 ***
+gdp_adjusted_kcal_supply                 1.028e-14 ***
+---
+Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+
+Total Sum of Squares:    1072.9
+Residual Sum of Squares: 167.31
+R-Squared:      0.84405
+Adj. R-Squared: 0.82915
+F-statistic: 264.311 on 6 and 293 DF, p-value: &lt; 2.22e-16</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb39"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb39-1"><a href="#cb39-1" aria-hidden="true" tabindex="-1"></a>panel_lm_gdp_adjusted_hy_fe <span class="ot">&lt;-</span> <span class="fu">plm</span>(hypertension_rate <span class="sc">~</span> gdp_adjusted_private_health_exppc_ppp <span class="sc">+</span> gdp_adjusted_government_health_exppc_ppp <span class="sc">+</span> gdppc_ppp <span class="sc">+</span> gdp_adjusted_unemployment_rate <span class="sc">+</span> gdp_adjusted_urban_population_rate <span class="sc">+</span> gdp_adjusted_kcal_supply, <span class="at">index =</span> <span class="fu">c</span>(<span class="st">"country"</span>, <span class="st">"year"</span>), <span class="at">model =</span> <span class="st">"within"</span>, <span class="at">data =</span> health_data_gdp_adjusted)</span>
+<span id="cb39-2"><a href="#cb39-2" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(panel_lm_gdp_adjusted_hy_fe)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Oneway (individual) effect Within Model
+
+Call:
+plm(formula = hypertension_rate ~ gdp_adjusted_private_health_exppc_ppp + 
+    gdp_adjusted_government_health_exppc_ppp + gdppc_ppp + gdp_adjusted_unemployment_rate + 
+    gdp_adjusted_urban_population_rate + gdp_adjusted_kcal_supply, 
+    data = health_data_gdp_adjusted, model = "within", index = c("country", 
+        "year"))
+
+Balanced Panel: n = 23, T = 14, N = 322
+
+Residuals:
+     Min.   1st Qu.    Median   3rd Qu.      Max. 
+-2.337579 -0.471569  0.088011  0.499604  1.796456 
+
+Coefficients:
+                                            Estimate  Std. Error  t-value
+gdp_adjusted_private_health_exppc_ppp    -4.0782e-05  3.4105e-04  -0.1196
+gdp_adjusted_government_health_exppc_ppp -2.5242e-04  1.9894e-04  -1.2688
+gdppc_ppp                                -1.6424e-04  7.7881e-06 -21.0888
+gdp_adjusted_unemployment_rate           -1.7977e-01  1.6986e-02 -10.5830
+gdp_adjusted_urban_population_rate        1.1117e-04  4.2542e-02   0.0026
+gdp_adjusted_kcal_supply                  1.8589e-03  4.9862e-04   3.7281
+                                          Pr(&gt;|t|)    
+gdp_adjusted_private_health_exppc_ppp    0.9048992    
+gdp_adjusted_government_health_exppc_ppp 0.2055105    
+gdppc_ppp                                &lt; 2.2e-16 ***
+gdp_adjusted_unemployment_rate           &lt; 2.2e-16 ***
+gdp_adjusted_urban_population_rate       0.9979168    
+gdp_adjusted_kcal_supply                 0.0002315 ***
+---
+Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+
+Total Sum of Squares:    487.52
+Residual Sum of Squares: 158.18
+R-Squared:      0.67554
+Adj. R-Squared: 0.64453
+F-statistic: 101.673 on 6 and 293 DF, p-value: &lt; 2.22e-16</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb41"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb41-1"><a href="#cb41-1" aria-hidden="true" tabindex="-1"></a>panel_lm_gdp_adjusted_dm_fe <span class="ot">&lt;-</span> <span class="fu">plm</span>(disease_mortality_rate <span class="sc">~</span> gdp_adjusted_private_health_exppc_ppp <span class="sc">+</span> gdp_adjusted_government_health_exppc_ppp <span class="sc">+</span> gdppc_ppp <span class="sc">+</span> gdp_adjusted_unemployment_rate <span class="sc">+</span> gdp_adjusted_urban_population_rate <span class="sc">+</span> gdp_adjusted_kcal_supply, <span class="at">index =</span> <span class="fu">c</span>(<span class="st">"country"</span>, <span class="st">"year"</span>), <span class="at">model =</span> <span class="st">"within"</span>, <span class="at">data =</span> health_data_gdp_adjusted)</span>
+<span id="cb41-2"><a href="#cb41-2" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(panel_lm_gdp_adjusted_dm_fe)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Oneway (individual) effect Within Model
+
+Call:
+plm(formula = disease_mortality_rate ~ gdp_adjusted_private_health_exppc_ppp + 
+    gdp_adjusted_government_health_exppc_ppp + gdppc_ppp + gdp_adjusted_unemployment_rate + 
+    gdp_adjusted_urban_population_rate + gdp_adjusted_kcal_supply, 
+    data = health_data_gdp_adjusted, model = "within", index = c("country", 
+        "year"))
+
+Balanced Panel: n = 23, T = 14, N = 322
+
+Residuals:
+     Min.   1st Qu.    Median   3rd Qu.      Max. 
+-3.290770 -0.406381 -0.018967  0.374604  2.927297 
+
+Coefficients:
+                                            Estimate  Std. Error  t-value
+gdp_adjusted_private_health_exppc_ppp     3.8486e-04  3.8938e-04   0.9884
+gdp_adjusted_government_health_exppc_ppp -5.7103e-04  2.2713e-04  -2.5141
+gdppc_ppp                                -2.0256e-04  8.8917e-06 -22.7812
+gdp_adjusted_unemployment_rate           -9.6680e-02  1.9394e-02  -4.9851
+gdp_adjusted_urban_population_rate        6.2379e-02  4.8571e-02   1.2843
+gdp_adjusted_kcal_supply                 -1.9462e-03  5.6928e-04  -3.4187
+                                          Pr(&gt;|t|)    
+gdp_adjusted_private_health_exppc_ppp    0.3237730    
+gdp_adjusted_government_health_exppc_ppp 0.0124710 *  
+gdppc_ppp                                &lt; 2.2e-16 ***
+gdp_adjusted_unemployment_rate           1.061e-06 ***
+gdp_adjusted_urban_population_rate       0.2000525    
+gdp_adjusted_kcal_supply                 0.0007184 ***
+---
+Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+
+Total Sum of Squares:    600.48
+Residual Sum of Squares: 206.19
+R-Squared:      0.65663
+Adj. R-Squared: 0.62381
+F-statistic: 93.3839 on 6 and 293 DF, p-value: &lt; 2.22e-16</code></pre>
+</div>
+</div>
+</section>
+<section id="random-effects" class="level3">
+<h3 class="anchored" data-anchor-id="random-effects">Random Effects</h3>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb43"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb43-1"><a href="#cb43-1" aria-hidden="true" tabindex="-1"></a>panel_lm_gdp_adjusted_ob_re <span class="ot">&lt;-</span> <span class="fu">plm</span>(obesity_rate <span class="sc">~</span> gdp_adjusted_private_health_exppc_ppp <span class="sc">+</span> gdp_adjusted_government_health_exppc_ppp <span class="sc">+</span> gdppc_ppp <span class="sc">+</span> gdp_adjusted_unemployment_rate <span class="sc">+</span> gdp_adjusted_urban_population_rate <span class="sc">+</span> gdp_adjusted_kcal_supply, <span class="at">index =</span> <span class="fu">c</span>(<span class="st">"country"</span>, <span class="st">"year"</span>), <span class="at">model =</span> <span class="st">"random"</span>, <span class="at">data =</span> health_data_gdp_adjusted)</span>
+<span id="cb43-2"><a href="#cb43-2" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(panel_lm_gdp_adjusted_ob_re)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Oneway (individual) effect Random Effect Model 
+   (Swamy-Arora's transformation)
+
+Call:
+plm(formula = obesity_rate ~ gdp_adjusted_private_health_exppc_ppp + 
+    gdp_adjusted_government_health_exppc_ppp + gdppc_ppp + gdp_adjusted_unemployment_rate + 
+    gdp_adjusted_urban_population_rate + gdp_adjusted_kcal_supply, 
+    data = health_data_gdp_adjusted, model = "random", index = c("country", 
+        "year"))
+
+Balanced Panel: n = 23, T = 14, N = 322
+
+Effects:
+                   var  std.dev share
+idiosyncratic   0.5710   0.7557 0.006
+individual    100.4766  10.0238 0.994
+theta: 0.9799
+
+Residuals:
+     Min.   1st Qu.    Median   3rd Qu.      Max. 
+-3.348226 -0.465010 -0.015014  0.417448  3.940075 
+
+Coefficients:
+                                           Estimate Std. Error z-value
+(Intercept)                              4.3227e+01 2.1093e+00 20.4934
+gdp_adjusted_private_health_exppc_ppp    1.1347e-03 3.5065e-04  3.2360
+gdp_adjusted_government_health_exppc_ppp 8.2787e-04 2.0454e-04  4.0475
+gdppc_ppp                                2.9361e-04 8.0013e-06 36.6952
+gdp_adjusted_unemployment_rate           1.0120e-01 1.7464e-02  5.7947
+gdp_adjusted_urban_population_rate       3.7627e-01 4.3739e-02  8.6027
+gdp_adjusted_kcal_supply                 4.1823e-03 5.1265e-04  8.1582
+                                          Pr(&gt;|z|)    
+(Intercept)                              &lt; 2.2e-16 ***
+gdp_adjusted_private_health_exppc_ppp     0.001212 ** 
+gdp_adjusted_government_health_exppc_ppp 5.177e-05 ***
+gdppc_ppp                                &lt; 2.2e-16 ***
+gdp_adjusted_unemployment_rate           6.846e-09 ***
+gdp_adjusted_urban_population_rate       &lt; 2.2e-16 ***
+gdp_adjusted_kcal_supply                 3.401e-16 ***
+---
+Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+
+Total Sum of Squares:    1085
+Residual Sum of Squares: 179.76
+R-Squared:      0.83433
+Adj. R-Squared: 0.83117
+Chisq: 1586.36 on 6 DF, p-value: &lt; 2.22e-16</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb45"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb45-1"><a href="#cb45-1" aria-hidden="true" tabindex="-1"></a>panel_lm_gdp_adjusted_hy_re <span class="ot">&lt;-</span> <span class="fu">plm</span>(hypertension_rate <span class="sc">~</span> gdp_adjusted_private_health_exppc_ppp <span class="sc">+</span> gdp_adjusted_government_health_exppc_ppp <span class="sc">+</span> gdppc_ppp <span class="sc">+</span> gdp_adjusted_unemployment_rate <span class="sc">+</span> gdp_adjusted_urban_population_rate <span class="sc">+</span> gdp_adjusted_kcal_supply, <span class="at">index =</span> <span class="fu">c</span>(<span class="st">"country"</span>, <span class="st">"year"</span>), <span class="at">model =</span> <span class="st">"random"</span>, <span class="at">data =</span> health_data_gdp_adjusted)</span>
+<span id="cb45-2"><a href="#cb45-2" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(panel_lm_gdp_adjusted_hy_re)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Oneway (individual) effect Random Effect Model 
+   (Swamy-Arora's transformation)
+
+Call:
+plm(formula = hypertension_rate ~ gdp_adjusted_private_health_exppc_ppp + 
+    gdp_adjusted_government_health_exppc_ppp + gdppc_ppp + gdp_adjusted_unemployment_rate + 
+    gdp_adjusted_urban_population_rate + gdp_adjusted_kcal_supply, 
+    data = health_data_gdp_adjusted, model = "random", index = c("country", 
+        "year"))
+
+Balanced Panel: n = 23, T = 14, N = 322
+
+Effects:
+                  var std.dev share
+idiosyncratic  0.5399  0.7348 0.019
+individual    28.5652  5.3446 0.981
+theta: 0.9633
+
+Residuals:
+      Min.    1st Qu.     Median    3rd Qu.       Max. 
+-2.3793376 -0.5136889  0.0061904  0.5373139  1.9351142 
+
+Coefficients:
+                                            Estimate  Std. Error  z-value
+(Intercept)                               4.0861e+01  1.1488e+00  35.5670
+gdp_adjusted_private_health_exppc_ppp    -4.0782e-05  3.4094e-04  -0.1196
+gdp_adjusted_government_health_exppc_ppp -2.5242e-04  1.9888e-04  -1.2692
+gdppc_ppp                                -1.6473e-04  7.7665e-06 -21.2101
+gdp_adjusted_unemployment_rate           -1.7977e-01  1.6981e-02 -10.5864
+gdp_adjusted_urban_population_rate        1.1117e-04  4.2528e-02   0.0026
+gdp_adjusted_kcal_supply                  1.8589e-03  4.9846e-04   3.7293
+                                          Pr(&gt;|z|)    
+(Intercept)                              &lt; 2.2e-16 ***
+gdp_adjusted_private_health_exppc_ppp     0.904787    
+gdp_adjusted_government_health_exppc_ppp  0.204357    
+gdppc_ppp                                &lt; 2.2e-16 ***
+gdp_adjusted_unemployment_rate           &lt; 2.2e-16 ***
+gdp_adjusted_urban_population_rate        0.997914    
+gdp_adjusted_kcal_supply                  0.000192 ***
+---
+Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+
+Total Sum of Squares:    501.9
+Residual Sum of Squares: 169.95
+R-Squared:      0.66139
+Adj. R-Squared: 0.65494
+Chisq: 615.272 on 6 DF, p-value: &lt; 2.22e-16</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb47"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb47-1"><a href="#cb47-1" aria-hidden="true" tabindex="-1"></a>panel_lm_gdp_adjusted_dm_re <span class="ot">&lt;-</span> <span class="fu">plm</span>(disease_mortality_rate <span class="sc">~</span> gdp_adjusted_private_health_exppc_ppp <span class="sc">+</span> gdp_adjusted_government_health_exppc_ppp <span class="sc">+</span> gdppc_ppp <span class="sc">+</span> gdp_adjusted_unemployment_rate <span class="sc">+</span> gdp_adjusted_urban_population_rate <span class="sc">+</span> gdp_adjusted_kcal_supply, <span class="at">index =</span> <span class="fu">c</span>(<span class="st">"country"</span>, <span class="st">"year"</span>), <span class="at">model =</span> <span class="st">"random"</span>, <span class="at">data =</span> health_data_gdp_adjusted)</span>
+<span id="cb47-2"><a href="#cb47-2" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(panel_lm_gdp_adjusted_dm_re)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Oneway (individual) effect Random Effect Model 
+   (Swamy-Arora's transformation)
+
+Call:
+plm(formula = disease_mortality_rate ~ gdp_adjusted_private_health_exppc_ppp + 
+    gdp_adjusted_government_health_exppc_ppp + gdppc_ppp + gdp_adjusted_unemployment_rate + 
+    gdp_adjusted_urban_population_rate + gdp_adjusted_kcal_supply, 
+    data = health_data_gdp_adjusted, model = "random", index = c("country", 
+        "year"))
+
+Balanced Panel: n = 23, T = 14, N = 322
+
+Effects:
+                  var std.dev share
+idiosyncratic  0.7037  0.8389 0.053
+individual    12.6487  3.5565 0.947
+theta: 0.9371
+
+Residuals:
+     Min.   1st Qu.    Median   3rd Qu.      Max. 
+-2.853650 -0.494207 -0.024573  0.384271  3.365372 
+
+Coefficients:
+                                            Estimate  Std. Error  z-value
+(Intercept)                               2.0683e+01  8.0600e-01  25.6610
+gdp_adjusted_private_health_exppc_ppp     3.8486e-04  3.8878e-04   0.9899
+gdp_adjusted_government_health_exppc_ppp -5.7103e-04  2.2678e-04  -2.5180
+gdppc_ppp                                -2.0240e-04  8.8145e-06 -22.9617
+gdp_adjusted_unemployment_rate           -9.6680e-02  1.9364e-02  -4.9929
+gdp_adjusted_urban_population_rate        6.2379e-02  4.8495e-02   1.2863
+gdp_adjusted_kcal_supply                 -1.9462e-03  5.6840e-04  -3.4240
+                                          Pr(&gt;|z|)    
+(Intercept)                              &lt; 2.2e-16 ***
+gdp_adjusted_private_health_exppc_ppp     0.322208    
+gdp_adjusted_government_health_exppc_ppp  0.011804 *  
+gdppc_ppp                                &lt; 2.2e-16 ***
+gdp_adjusted_unemployment_rate           5.949e-07 ***
+gdp_adjusted_urban_population_rate        0.198342    
+gdp_adjusted_kcal_supply                  0.000617 ***
+---
+Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+
+Total Sum of Squares:    619.94
+Residual Sum of Squares: 220.98
+R-Squared:      0.64354
+Adj. R-Squared: 0.63675
+Chisq: 568.685 on 6 DF, p-value: &lt; 2.22e-16</code></pre>
+</div>
+</div>
+</section>
+<section id="hausman-test" class="level3">
+<h3 class="anchored" data-anchor-id="hausman-test">Hausman Test</h3>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb49"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb49-1"><a href="#cb49-1" aria-hidden="true" tabindex="-1"></a><span class="fu">phtest</span>(panel_lm_gdp_adjusted_ob_fe, panel_lm_gdp_adjusted_ob_re)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+    Hausman Test
+
+data:  obesity_rate ~ gdp_adjusted_private_health_exppc_ppp + gdp_adjusted_government_health_exppc_ppp +  ...
+chisq = 0.55472, df = 6, p-value = 0.9971
+alternative hypothesis: one model is inconsistent</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb51"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb51-1"><a href="#cb51-1" aria-hidden="true" tabindex="-1"></a><span class="fu">phtest</span>(panel_lm_gdp_adjusted_hy_fe, panel_lm_gdp_adjusted_hy_re)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+    Hausman Test
+
+data:  hypertension_rate ~ gdp_adjusted_private_health_exppc_ppp + gdp_adjusted_government_health_exppc_ppp +  ...
+chisq = 0.70356, df = 6, p-value = 0.9944
+alternative hypothesis: one model is inconsistent</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb53"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb53-1"><a href="#cb53-1" aria-hidden="true" tabindex="-1"></a><span class="fu">phtest</span>(panel_lm_gdp_adjusted_dm_fe, panel_lm_gdp_adjusted_dm_re)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+    Hausman Test
+
+data:  disease_mortality_rate ~ gdp_adjusted_private_health_exppc_ppp +  ...
+chisq = 0.02061, df = 6, p-value = 1
+alternative hypothesis: one model is inconsistent</code></pre>
+</div>
+</div>
+<p>Hausman tests all favor the random effects model.</p>
+</section>
+</section>
+<section id="test-new-model-for-multicollinearity" class="level2">
+<h2 class="anchored" data-anchor-id="test-new-model-for-multicollinearity">Test new model for multicollinearity</h2>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb55"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb55-1"><a href="#cb55-1" aria-hidden="true" tabindex="-1"></a>panel_health_data_gdp_adjusted <span class="ot">&lt;-</span> <span class="fu">pdata.frame</span>(health_data_gdp_adjusted, <span class="at">index =</span> <span class="fu">c</span>(<span class="st">"country"</span>, <span class="st">"year"</span>))</span>
+<span id="cb55-2"><a href="#cb55-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb55-3"><a href="#cb55-3" aria-hidden="true" tabindex="-1"></a>pooling_model_gdp_adjusted_ob <span class="ot">&lt;-</span> <span class="fu">plm</span>(obesity_rate <span class="sc">~</span> gdp_adjusted_private_health_exppc_ppp <span class="sc">+</span> gdp_adjusted_government_health_exppc_ppp <span class="sc">+</span> gdppc_ppp <span class="sc">+</span> gdp_adjusted_unemployment_rate <span class="sc">+</span> gdp_adjusted_urban_population_rate <span class="sc">+</span> gdp_adjusted_kcal_supply, <span class="at">data =</span> panel_health_data_gdp_adjusted, <span class="at">model =</span> <span class="st">"pooling"</span>)</span>
+<span id="cb55-4"><a href="#cb55-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb55-5"><a href="#cb55-5" aria-hidden="true" tabindex="-1"></a><span class="fu">vif</span>(pooling_model_gdp_adjusted_ob)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>   gdp_adjusted_private_health_exppc_ppp 
+                                1.060867 
+gdp_adjusted_government_health_exppc_ppp 
+                                1.143029 
+                               gdppc_ppp 
+                                1.000000 
+          gdp_adjusted_unemployment_rate 
+                                1.148944 
+      gdp_adjusted_urban_population_rate 
+                                1.271535 
+                gdp_adjusted_kcal_supply 
+                                1.104072 </code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb57"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb57-1"><a href="#cb57-1" aria-hidden="true" tabindex="-1"></a>panel_health_data_gdp_adjusted <span class="sc">|&gt;</span> </span>
+<span id="cb57-2"><a href="#cb57-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(gdp_adjusted_private_health_exppc_ppp, gdp_adjusted_government_health_exppc_ppp, gdppc_ppp, gdp_adjusted_unemployment_rate, gdp_adjusted_urban_population_rate, gdp_adjusted_kcal_supply) <span class="sc">|&gt;</span> <span class="fu">cor</span>() <span class="ot">-&gt;</span> gdp_adjusted_cor_matrix</span>
+<span id="cb57-3"><a href="#cb57-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb57-4"><a href="#cb57-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Reshape the correlation matrix into long format</span></span>
+<span id="cb57-5"><a href="#cb57-5" aria-hidden="true" tabindex="-1"></a>gdp_adjusted_cor_matrix_melted <span class="ot">&lt;-</span> <span class="fu">melt</span>(gdp_adjusted_cor_matrix)</span>
+<span id="cb57-6"><a href="#cb57-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb57-7"><a href="#cb57-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Create the correlation matrix plot</span></span>
+<span id="cb57-8"><a href="#cb57-8" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(gdp_adjusted_cor_matrix_melted, <span class="fu">aes</span>(Var1, Var2, <span class="at">fill =</span> value)) <span class="sc">+</span></span>
+<span id="cb57-9"><a href="#cb57-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_tile</span>() <span class="sc">+</span></span>
+<span id="cb57-10"><a href="#cb57-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_text</span>(<span class="fu">aes</span>(<span class="at">label =</span> <span class="fu">round</span>(value, <span class="dv">2</span>)), <span class="at">color =</span> <span class="st">"white"</span>, <span class="at">size =</span> <span class="dv">3</span>) <span class="sc">+</span>  <span class="co"># Add correlation values</span></span>
+<span id="cb57-11"><a href="#cb57-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_fill_gradient2</span>(<span class="at">low =</span> <span class="st">"red"</span>, <span class="at">high =</span> <span class="st">"blue"</span>, <span class="at">mid =</span> <span class="st">"white"</span>, <span class="at">midpoint =</span> <span class="dv">0</span>) <span class="sc">+</span></span>
+<span id="cb57-12"><a href="#cb57-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_minimal</span>() <span class="sc">+</span></span>
+<span id="cb57-13"><a href="#cb57-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">title =</span> <span class="st">"Correlation Matrix: GDP-Adjusted Model Predictors"</span>, <span class="at">x =</span> <span class="st">""</span>, <span class="at">y =</span> <span class="st">""</span>) <span class="sc">+</span></span>
+<span id="cb57-14"><a href="#cb57-14" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme</span>(<span class="at">axis.text.x =</span> <span class="fu">element_text</span>(<span class="at">angle =</span> <span class="dv">45</span>, <span class="at">hjust =</span> <span class="dv">1</span>)) <span class="sc">+</span></span>
+<span id="cb57-15"><a href="#cb57-15" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_fill_viridis</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Scale for fill is already present.
+Adding another scale for fill, which will replace the existing scale.</code></pre>
+</div>
+<div class="cell-output-display">
+<p><img src="Restructured-Statistical-Analysis_files/figure-html/unnamed-chunk-15-1.png" class="img-fluid" width="672"></p>
+</div>
+</div>
+</section>
+<section id="add-interaction-term-into-model" class="level2">
+<h2 class="anchored" data-anchor-id="add-interaction-term-into-model">Add interaction term into model</h2>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb59"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb59-1"><a href="#cb59-1" aria-hidden="true" tabindex="-1"></a>panel_lm_gdp_adjusted_ob_re_full <span class="ot">&lt;-</span> <span class="fu">plm</span>(obesity_rate <span class="sc">~</span> gdp_adjusted_private_health_exppc_ppp <span class="sc">+</span> gdp_adjusted_government_health_exppc_ppp <span class="sc">+</span> gdppc_ppp <span class="sc">+</span> gdp_adjusted_unemployment_rate <span class="sc">+</span> gdp_adjusted_urban_population_rate <span class="sc">+</span> gdp_adjusted_kcal_supply <span class="sc">+</span> gdp_adjusted_private_health_exppc_ppp<span class="sc">:</span>gdp_adjusted_government_health_exppc_ppp, <span class="at">index =</span> <span class="fu">c</span>(<span class="st">"country"</span>, <span class="st">"year"</span>), <span class="at">model =</span> <span class="st">"random"</span>, <span class="at">data =</span> health_data_gdp_adjusted)</span>
+<span id="cb59-2"><a href="#cb59-2" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(panel_lm_gdp_adjusted_ob_re_full)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Oneway (individual) effect Random Effect Model 
+   (Swamy-Arora's transformation)
+
+Call:
+plm(formula = obesity_rate ~ gdp_adjusted_private_health_exppc_ppp + 
+    gdp_adjusted_government_health_exppc_ppp + gdppc_ppp + gdp_adjusted_unemployment_rate + 
+    gdp_adjusted_urban_population_rate + gdp_adjusted_kcal_supply + 
+    gdp_adjusted_private_health_exppc_ppp:gdp_adjusted_government_health_exppc_ppp, 
+    data = health_data_gdp_adjusted, model = "random", index = c("country", 
+        "year"))
+
+Balanced Panel: n = 23, T = 14, N = 322
+
+Effects:
+                  var std.dev share
+idiosyncratic  0.5699  0.7549 0.006
+individual    97.3030  9.8642 0.994
+theta: 0.9796
+
+Residuals:
+      Min.    1st Qu.     Median    3rd Qu.       Max. 
+-3.3248257 -0.4613153  0.0011839  0.4202600  4.0175081 
+
+Coefficients:
+                                                                                  Estimate
+(Intercept)                                                                     4.3208e+01
+gdp_adjusted_private_health_exppc_ppp                                           1.0689e-03
+gdp_adjusted_government_health_exppc_ppp                                        8.1850e-04
+gdppc_ppp                                                                       2.9420e-04
+gdp_adjusted_unemployment_rate                                                  1.0101e-01
+gdp_adjusted_urban_population_rate                                              3.7772e-01
+gdp_adjusted_kcal_supply                                                        4.2162e-03
+gdp_adjusted_private_health_exppc_ppp:gdp_adjusted_government_health_exppc_ppp -1.7585e-06
+                                                                                Std. Error
+(Intercept)                                                                     2.0790e+00
+gdp_adjusted_private_health_exppc_ppp                                           3.5481e-04
+gdp_adjusted_government_health_exppc_ppp                                        2.0473e-04
+gdppc_ppp                                                                       8.0181e-06
+gdp_adjusted_unemployment_rate                                                  1.7469e-02
+gdp_adjusted_urban_population_rate                                              4.3766e-02
+gdp_adjusted_kcal_supply                                                        5.1353e-04
+gdp_adjusted_private_health_exppc_ppp:gdp_adjusted_government_health_exppc_ppp  1.4338e-06
+                                                                               z-value
+(Intercept)                                                                    20.7835
+gdp_adjusted_private_health_exppc_ppp                                           3.0126
+gdp_adjusted_government_health_exppc_ppp                                        3.9979
+gdppc_ppp                                                                      36.6921
+gdp_adjusted_unemployment_rate                                                  5.7821
+gdp_adjusted_urban_population_rate                                              8.6304
+gdp_adjusted_kcal_supply                                                        8.2103
+gdp_adjusted_private_health_exppc_ppp:gdp_adjusted_government_health_exppc_ppp -1.2265
+                                                                                Pr(&gt;|z|)
+(Intercept)                                                                    &lt; 2.2e-16
+gdp_adjusted_private_health_exppc_ppp                                            0.00259
+gdp_adjusted_government_health_exppc_ppp                                       6.391e-05
+gdppc_ppp                                                                      &lt; 2.2e-16
+gdp_adjusted_unemployment_rate                                                 7.379e-09
+gdp_adjusted_urban_population_rate                                             &lt; 2.2e-16
+gdp_adjusted_kcal_supply                                                       &lt; 2.2e-16
+gdp_adjusted_private_health_exppc_ppp:gdp_adjusted_government_health_exppc_ppp   0.22002
+                                                                                  
+(Intercept)                                                                    ***
+gdp_adjusted_private_health_exppc_ppp                                          ** 
+gdp_adjusted_government_health_exppc_ppp                                       ***
+gdppc_ppp                                                                      ***
+gdp_adjusted_unemployment_rate                                                 ***
+gdp_adjusted_urban_population_rate                                             ***
+gdp_adjusted_kcal_supply                                                       ***
+gdp_adjusted_private_health_exppc_ppp:gdp_adjusted_government_health_exppc_ppp    
+---
+Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+
+Total Sum of Squares:    1085.4
+Residual Sum of Squares: 179.28
+R-Squared:      0.83483
+Adj. R-Squared: 0.83114
+Chisq: 1587.03 on 7 DF, p-value: &lt; 2.22e-16</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb61"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb61-1"><a href="#cb61-1" aria-hidden="true" tabindex="-1"></a>panel_lm_gdp_adjusted_hy_re_full <span class="ot">&lt;-</span> <span class="fu">plm</span>(hypertension_rate <span class="sc">~</span> gdp_adjusted_private_health_exppc_ppp <span class="sc">+</span> gdp_adjusted_government_health_exppc_ppp <span class="sc">+</span> gdppc_ppp <span class="sc">+</span> gdp_adjusted_unemployment_rate <span class="sc">+</span> gdp_adjusted_urban_population_rate <span class="sc">+</span> gdp_adjusted_kcal_supply <span class="sc">+</span> gdp_adjusted_private_health_exppc_ppp<span class="sc">:</span>gdp_adjusted_government_health_exppc_ppp, <span class="at">index =</span> <span class="fu">c</span>(<span class="st">"country"</span>, <span class="st">"year"</span>), <span class="at">model =</span> <span class="st">"random"</span>, <span class="at">data =</span> health_data_gdp_adjusted)</span>
+<span id="cb61-2"><a href="#cb61-2" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(panel_lm_gdp_adjusted_hy_re_full)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Oneway (individual) effect Random Effect Model 
+   (Swamy-Arora's transformation)
+
+Call:
+plm(formula = hypertension_rate ~ gdp_adjusted_private_health_exppc_ppp + 
+    gdp_adjusted_government_health_exppc_ppp + gdppc_ppp + gdp_adjusted_unemployment_rate + 
+    gdp_adjusted_urban_population_rate + gdp_adjusted_kcal_supply + 
+    gdp_adjusted_private_health_exppc_ppp:gdp_adjusted_government_health_exppc_ppp, 
+    data = health_data_gdp_adjusted, model = "random", index = c("country", 
+        "year"))
+
+Balanced Panel: n = 23, T = 14, N = 322
+
+Effects:
+                  var std.dev share
+idiosyncratic  0.5391  0.7343 0.018
+individual    29.6922  5.4491 0.982
+theta: 0.964
+
+Residuals:
+     Min.   1st Qu.    Median   3rd Qu.      Max. 
+-2.534101 -0.508416  0.022997  0.530252  1.939988 
+
+Coefficients:
+                                                                                  Estimate
+(Intercept)                                                                     4.0879e+01
+gdp_adjusted_private_health_exppc_ppp                                           2.2003e-05
+gdp_adjusted_government_health_exppc_ppp                                       -2.4348e-04
+gdppc_ppp                                                                      -1.6528e-04
+gdp_adjusted_unemployment_rate                                                 -1.7959e-01
+gdp_adjusted_urban_population_rate                                             -1.2683e-03
+gdp_adjusted_kcal_supply                                                        1.8265e-03
+gdp_adjusted_private_health_exppc_ppp:gdp_adjusted_government_health_exppc_ppp  1.6790e-06
+                                                                                Std. Error
+(Intercept)                                                                     1.1684e+00
+gdp_adjusted_private_health_exppc_ppp                                           3.4418e-04
+gdp_adjusted_government_health_exppc_ppp                                        1.9860e-04
+gdppc_ppp                                                                       7.7653e-06
+gdp_adjusted_unemployment_rate                                                  1.6946e-02
+gdp_adjusted_urban_population_rate                                              4.2455e-02
+gdp_adjusted_kcal_supply                                                        4.9814e-04
+gdp_adjusted_private_health_exppc_ppp:gdp_adjusted_government_health_exppc_ppp  1.3904e-06
+                                                                                z-value
+(Intercept)                                                                     34.9873
+gdp_adjusted_private_health_exppc_ppp                                            0.0639
+gdp_adjusted_government_health_exppc_ppp                                        -1.2260
+gdppc_ppp                                                                      -21.2840
+gdp_adjusted_unemployment_rate                                                 -10.5974
+gdp_adjusted_urban_population_rate                                              -0.0299
+gdp_adjusted_kcal_supply                                                         3.6666
+gdp_adjusted_private_health_exppc_ppp:gdp_adjusted_government_health_exppc_ppp   1.2076
+                                                                                Pr(&gt;|z|)
+(Intercept)                                                                    &lt; 2.2e-16
+gdp_adjusted_private_health_exppc_ppp                                          0.9490280
+gdp_adjusted_government_health_exppc_ppp                                       0.2202096
+gdppc_ppp                                                                      &lt; 2.2e-16
+gdp_adjusted_unemployment_rate                                                 &lt; 2.2e-16
+gdp_adjusted_urban_population_rate                                             0.9761669
+gdp_adjusted_kcal_supply                                                       0.0002458
+gdp_adjusted_private_health_exppc_ppp:gdp_adjusted_government_health_exppc_ppp 0.2272047
+                                                                                  
+(Intercept)                                                                    ***
+gdp_adjusted_private_health_exppc_ppp                                             
+gdp_adjusted_government_health_exppc_ppp                                          
+gdppc_ppp                                                                      ***
+gdp_adjusted_unemployment_rate                                                 ***
+gdp_adjusted_urban_population_rate                                                
+gdp_adjusted_kcal_supply                                                       ***
+gdp_adjusted_private_health_exppc_ppp:gdp_adjusted_government_health_exppc_ppp    
+---
+Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+
+Total Sum of Squares:    501.33
+Residual Sum of Squares: 168.7
+R-Squared:      0.66349
+Adj. R-Squared: 0.65599
+Chisq: 619.112 on 7 DF, p-value: &lt; 2.22e-16</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb63"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb63-1"><a href="#cb63-1" aria-hidden="true" tabindex="-1"></a>panel_lm_gdp_adjusted_dm_re_full <span class="ot">&lt;-</span> <span class="fu">plm</span>(disease_mortality_rate <span class="sc">~</span> gdp_adjusted_private_health_exppc_ppp <span class="sc">+</span> gdp_adjusted_government_health_exppc_ppp <span class="sc">+</span> gdppc_ppp <span class="sc">+</span> gdp_adjusted_unemployment_rate <span class="sc">+</span> gdp_adjusted_urban_population_rate <span class="sc">+</span> gdp_adjusted_kcal_supply <span class="sc">+</span> gdp_adjusted_private_health_exppc_ppp<span class="sc">:</span>gdp_adjusted_government_health_exppc_ppp, <span class="at">index =</span> <span class="fu">c</span>(<span class="st">"country"</span>, <span class="st">"year"</span>), <span class="at">model =</span> <span class="st">"random"</span>, <span class="at">data =</span> health_data_gdp_adjusted)</span>
+<span id="cb63-2"><a href="#cb63-2" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(panel_lm_gdp_adjusted_dm_re_full)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Oneway (individual) effect Random Effect Model 
+   (Swamy-Arora's transformation)
+
+Call:
+plm(formula = disease_mortality_rate ~ gdp_adjusted_private_health_exppc_ppp + 
+    gdp_adjusted_government_health_exppc_ppp + gdppc_ppp + gdp_adjusted_unemployment_rate + 
+    gdp_adjusted_urban_population_rate + gdp_adjusted_kcal_supply + 
+    gdp_adjusted_private_health_exppc_ppp:gdp_adjusted_government_health_exppc_ppp, 
+    data = health_data_gdp_adjusted, model = "random", index = c("country", 
+        "year"))
+
+Balanced Panel: n = 23, T = 14, N = 322
+
+Effects:
+                  var std.dev share
+idiosyncratic  0.6997  0.8365 0.053
+individual    12.4608  3.5300 0.947
+theta: 0.9368
+
+Residuals:
+     Min.   1st Qu.    Median   3rd Qu.      Max. 
+-2.976262 -0.488973 -0.040029  0.370147  3.339471 
+
+Coefficients:
+                                                                                  Estimate
+(Intercept)                                                                     2.0711e+01
+gdp_adjusted_private_health_exppc_ppp                                           4.8530e-04
+gdp_adjusted_government_health_exppc_ppp                                       -5.5672e-04
+gdppc_ppp                                                                      -2.0328e-04
+gdp_adjusted_unemployment_rate                                                 -9.6389e-02
+gdp_adjusted_urban_population_rate                                              6.0172e-02
+gdp_adjusted_kcal_supply                                                       -1.9981e-03
+gdp_adjusted_private_health_exppc_ppp:gdp_adjusted_government_health_exppc_ppp  2.6859e-06
+                                                                                Std. Error
+(Intercept)                                                                     8.0089e-01
+gdp_adjusted_private_health_exppc_ppp                                           3.9224e-04
+gdp_adjusted_government_health_exppc_ppp                                        2.2634e-04
+gdppc_ppp                                                                       8.8061e-06
+gdp_adjusted_unemployment_rate                                                  1.9313e-02
+gdp_adjusted_urban_population_rate                                              4.8384e-02
+gdp_adjusted_kcal_supply                                                        5.6771e-04
+gdp_adjusted_private_health_exppc_ppp:gdp_adjusted_government_health_exppc_ppp  1.5828e-06
+                                                                                z-value
+(Intercept)                                                                     25.8600
+gdp_adjusted_private_health_exppc_ppp                                            1.2373
+gdp_adjusted_government_health_exppc_ppp                                        -2.4597
+gdppc_ppp                                                                      -23.0845
+gdp_adjusted_unemployment_rate                                                  -4.9910
+gdp_adjusted_urban_population_rate                                               1.2436
+gdp_adjusted_kcal_supply                                                        -3.5195
+gdp_adjusted_private_health_exppc_ppp:gdp_adjusted_government_health_exppc_ppp   1.6969
+                                                                                Pr(&gt;|z|)
+(Intercept)                                                                    &lt; 2.2e-16
+gdp_adjusted_private_health_exppc_ppp                                          0.2159875
+gdp_adjusted_government_health_exppc_ppp                                       0.0139046
+gdppc_ppp                                                                      &lt; 2.2e-16
+gdp_adjusted_unemployment_rate                                                 6.007e-07
+gdp_adjusted_urban_population_rate                                             0.2136297
+gdp_adjusted_kcal_supply                                                       0.0004323
+gdp_adjusted_private_health_exppc_ppp:gdp_adjusted_government_health_exppc_ppp 0.0897183
+                                                                                  
+(Intercept)                                                                    ***
+gdp_adjusted_private_health_exppc_ppp                                             
+gdp_adjusted_government_health_exppc_ppp                                       *  
+gdppc_ppp                                                                      ***
+gdp_adjusted_unemployment_rate                                                 ***
+gdp_adjusted_urban_population_rate                                                
+gdp_adjusted_kcal_supply                                                       ***
+gdp_adjusted_private_health_exppc_ppp:gdp_adjusted_government_health_exppc_ppp .  
+---
+Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+
+Total Sum of Squares:    620.12
+Residual Sum of Squares: 219.11
+R-Squared:      0.64666
+Adj. R-Squared: 0.63878
+Chisq: 574.666 on 7 DF, p-value: &lt; 2.22e-16</code></pre>
+</div>
+</div>
+<section id="run-wald-test-for-interaction-term" class="level3">
+<h3 class="anchored" data-anchor-id="run-wald-test-for-interaction-term">Run Wald Test for interaction term</h3>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb65"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb65-1"><a href="#cb65-1" aria-hidden="true" tabindex="-1"></a><span class="fu">waldtest</span>(panel_lm_gdp_adjusted_ob_re, panel_lm_gdp_adjusted_ob_re_full)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Wald test
+
+Model 1: obesity_rate ~ gdp_adjusted_private_health_exppc_ppp + gdp_adjusted_government_health_exppc_ppp + 
+    gdppc_ppp + gdp_adjusted_unemployment_rate + gdp_adjusted_urban_population_rate + 
+    gdp_adjusted_kcal_supply
+Model 2: obesity_rate ~ gdp_adjusted_private_health_exppc_ppp + gdp_adjusted_government_health_exppc_ppp + 
+    gdppc_ppp + gdp_adjusted_unemployment_rate + gdp_adjusted_urban_population_rate + 
+    gdp_adjusted_kcal_supply + gdp_adjusted_private_health_exppc_ppp:gdp_adjusted_government_health_exppc_ppp
+  Res.Df Df  Chisq Pr(&gt;Chisq)
+1    315                     
+2    314  1 1.5042       0.22</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb67"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb67-1"><a href="#cb67-1" aria-hidden="true" tabindex="-1"></a><span class="fu">waldtest</span>(panel_lm_gdp_adjusted_hy_re, panel_lm_gdp_adjusted_hy_re_full)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Wald test
+
+Model 1: hypertension_rate ~ gdp_adjusted_private_health_exppc_ppp + gdp_adjusted_government_health_exppc_ppp + 
+    gdppc_ppp + gdp_adjusted_unemployment_rate + gdp_adjusted_urban_population_rate + 
+    gdp_adjusted_kcal_supply
+Model 2: hypertension_rate ~ gdp_adjusted_private_health_exppc_ppp + gdp_adjusted_government_health_exppc_ppp + 
+    gdppc_ppp + gdp_adjusted_unemployment_rate + gdp_adjusted_urban_population_rate + 
+    gdp_adjusted_kcal_supply + gdp_adjusted_private_health_exppc_ppp:gdp_adjusted_government_health_exppc_ppp
+  Res.Df Df  Chisq Pr(&gt;Chisq)
+1    315                     
+2    314  1 1.4583     0.2272</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb69"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb69-1"><a href="#cb69-1" aria-hidden="true" tabindex="-1"></a><span class="fu">waldtest</span>(panel_lm_gdp_adjusted_dm_re, panel_lm_gdp_adjusted_dm_re_full)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Wald test
+
+Model 1: disease_mortality_rate ~ gdp_adjusted_private_health_exppc_ppp + 
+    gdp_adjusted_government_health_exppc_ppp + gdppc_ppp + gdp_adjusted_unemployment_rate + 
+    gdp_adjusted_urban_population_rate + gdp_adjusted_kcal_supply
+Model 2: disease_mortality_rate ~ gdp_adjusted_private_health_exppc_ppp + 
+    gdp_adjusted_government_health_exppc_ppp + gdppc_ppp + gdp_adjusted_unemployment_rate + 
+    gdp_adjusted_urban_population_rate + gdp_adjusted_kcal_supply + 
+    gdp_adjusted_private_health_exppc_ppp:gdp_adjusted_government_health_exppc_ppp
+  Res.Df Df  Chisq Pr(&gt;Chisq)  
+1    315                       
+2    314  1 2.8794    0.08972 .
+---
+Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1</code></pre>
+</div>
+</div>
+<p>The Wald Test results for all models suggest the added interaction term does not significantly improve the model fit, and it can be dropped from our model.</p>
+</section>
+<section id="end-of-model" class="level3">
+<h3 class="anchored" data-anchor-id="end-of-model">End of model</h3>
+</section>
+</section>
+<section id="eda-needs-fixing.-chart-titles-and-everything-should-be-adjusted-ensure-correct-dataset." class="level2">
+<h2 class="anchored" data-anchor-id="eda-needs-fixing.-chart-titles-and-everything-should-be-adjusted-ensure-correct-dataset.">EDA: NEEDS FIXING. CHART TITLES AND EVERYTHING SHOULD BE ADJUSTED, ENSURE CORRECT DATASET.</h2>
+<section id="exploratory-charts-with-raw-data" class="level3">
+<h3 class="anchored" data-anchor-id="exploratory-charts-with-raw-data">Exploratory charts with raw data</h3>
+<section id="include-chart-of-public-v.-private-health-expenditure" class="level4">
+<h4 class="anchored" data-anchor-id="include-chart-of-public-v.-private-health-expenditure">Include chart of public v. private health expenditure</h4>
+</section>
+</section>
+<section id="exploratory-charts-after-adjusting-for-gdp" class="level3">
+<h3 class="anchored" data-anchor-id="exploratory-charts-after-adjusting-for-gdp">Exploratory charts after adjusting for GDP</h3>
+</section>
+<section id="charts-of-results-with-statistical-significance-outlined" class="level3">
+<h3 class="anchored" data-anchor-id="charts-of-results-with-statistical-significance-outlined">Charts of results with statistical significance outlined</h3>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb71"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb71-1"><a href="#cb71-1" aria-hidden="true" tabindex="-1"></a>health_data<span class="sc">|&gt;</span> </span>
+<span id="cb71-2"><a href="#cb71-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> private_health_exppc_ppp)) <span class="sc">+</span></span>
+<span id="cb71-3"><a href="#cb71-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_histogram</span>() <span class="sc">+</span></span>
+<span id="cb71-4"><a href="#cb71-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_bw</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb72"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb72-1"><a href="#cb72-1" aria-hidden="true" tabindex="-1"></a>health_data_gdp_adjusted <span class="sc">|&gt;</span> </span>
+<span id="cb72-2"><a href="#cb72-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> gdp_adjusted_government_health_exppc_ppp)) <span class="sc">+</span></span>
+<span id="cb72-3"><a href="#cb72-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_histogram</span>() <span class="sc">+</span></span>
+<span id="cb72-4"><a href="#cb72-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_bw</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb73"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb73-1"><a href="#cb73-1" aria-hidden="true" tabindex="-1"></a>health_data_gdp_adjusted <span class="sc">|&gt;</span> </span>
+<span id="cb73-2"><a href="#cb73-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> gdp_adjusted_unemployment_rate)) <span class="sc">+</span></span>
+<span id="cb73-3"><a href="#cb73-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_histogram</span>() <span class="sc">+</span></span>
+<span id="cb73-4"><a href="#cb73-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_bw</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb74"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb74-1"><a href="#cb74-1" aria-hidden="true" tabindex="-1"></a>health_data_gdp_adjusted <span class="sc">|&gt;</span> </span>
+<span id="cb74-2"><a href="#cb74-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> gdp_adjusted_urban_population_rate)) <span class="sc">+</span></span>
+<span id="cb74-3"><a href="#cb74-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_histogram</span>() <span class="sc">+</span></span>
+<span id="cb74-4"><a href="#cb74-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_bw</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb75"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb75-1"><a href="#cb75-1" aria-hidden="true" tabindex="-1"></a>health_data_gdp_adjusted <span class="sc">|&gt;</span> </span>
+<span id="cb75-2"><a href="#cb75-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> gdp_adjusted_kcal_supply)) <span class="sc">+</span></span>
+<span id="cb75-3"><a href="#cb75-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_histogram</span>() <span class="sc">+</span></span>
+<span id="cb75-4"><a href="#cb75-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_bw</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb76"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb76-1"><a href="#cb76-1" aria-hidden="true" tabindex="-1"></a>health_data_gdp_adjusted <span class="sc">|&gt;</span> </span>
+<span id="cb76-2"><a href="#cb76-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> year, <span class="at">y =</span> disease_mortality_rate, <span class="at">color =</span> country)) <span class="sc">+</span></span>
+<span id="cb76-3"><a href="#cb76-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>() <span class="sc">+</span></span>
+<span id="cb76-4"><a href="#cb76-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_line</span>() <span class="sc">+</span></span>
+<span id="cb76-5"><a href="#cb76-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_fill_viridis</span>(<span class="at">option =</span> <span class="st">"D"</span>) <span class="sc">+</span></span>
+<span id="cb76-6"><a href="#cb76-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_bw</span>() <span class="sc">+</span></span>
+<span id="cb76-7"><a href="#cb76-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">title =</span> <span class="st">"Mortality Rate from CVD, Cancer, Diabetes, or CRD over Time"</span>, <span class="at">subtitle =</span> <span class="st">"Percentage of Adults ages 30-70"</span>, <span class="at">x =</span> <span class="st">"Year"</span>, <span class="at">y =</span> <span class="st">"Mortality Rate (%)"</span>, <span class="at">caption =</span> <span class="st">"Data Source: World Bank Health Nutrition and Population Statistics Database "</span> ) <span class="sc">+</span></span>
+<span id="cb76-8"><a href="#cb76-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme</span>(<span class="at">legend.title=</span><span class="fu">element_blank</span>())</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb77"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb77-1"><a href="#cb77-1" aria-hidden="true" tabindex="-1"></a>health_data_gdp_adjusted <span class="sc">|&gt;</span> </span>
+<span id="cb77-2"><a href="#cb77-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> year, <span class="at">y =</span> obesity_rate, <span class="at">color =</span> country)) <span class="sc">+</span></span>
+<span id="cb77-3"><a href="#cb77-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>() <span class="sc">+</span></span>
+<span id="cb77-4"><a href="#cb77-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_line</span>() <span class="sc">+</span></span>
+<span id="cb77-5"><a href="#cb77-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_fill_viridis</span>(<span class="at">option =</span> <span class="st">"D"</span>) <span class="sc">+</span></span>
+<span id="cb77-6"><a href="#cb77-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_bw</span>() <span class="sc">+</span></span>
+<span id="cb77-7"><a href="#cb77-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">title =</span> <span class="st">"Obesity Rate over Time"</span>, <span class="at">subtitle =</span> <span class="st">"Percentage of Adults"</span>, <span class="at">x =</span> <span class="st">"Year"</span>, <span class="at">y =</span> <span class="st">"Obesity Rate (%)"</span>, <span class="at">caption =</span> <span class="st">"Data Source: World Bank Health Nutrition and Population Statistics Database "</span> ) <span class="sc">+</span></span>
+<span id="cb77-8"><a href="#cb77-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme</span>(<span class="at">legend.title=</span><span class="fu">element_blank</span>())</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb78"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb78-1"><a href="#cb78-1" aria-hidden="true" tabindex="-1"></a>health_data_gdp_adjusted <span class="sc">|&gt;</span> </span>
+<span id="cb78-2"><a href="#cb78-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> year, <span class="at">y =</span> hypertension_rate, <span class="at">color =</span> country)) <span class="sc">+</span></span>
+<span id="cb78-3"><a href="#cb78-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>() <span class="sc">+</span></span>
+<span id="cb78-4"><a href="#cb78-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_line</span>() <span class="sc">+</span></span>
+<span id="cb78-5"><a href="#cb78-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_fill_viridis</span>(<span class="at">option =</span> <span class="st">"D"</span>) <span class="sc">+</span></span>
+<span id="cb78-6"><a href="#cb78-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_bw</span>() <span class="sc">+</span></span>
+<span id="cb78-7"><a href="#cb78-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">title =</span> <span class="st">"Hypertension Rate over Time"</span>, <span class="at">subtitle =</span> <span class="st">"Percentage of Adults ages 30-79"</span>, <span class="at">x =</span> <span class="st">"Year"</span>, <span class="at">y =</span> <span class="st">"Hypertension Rate (%)"</span>, <span class="at">caption =</span> <span class="st">"Data Source: World Bank Health Nutrition and Population Statistics Database "</span> ) <span class="sc">+</span></span>
+<span id="cb78-8"><a href="#cb78-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme</span>(<span class="at">legend.title=</span><span class="fu">element_blank</span>())</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb79"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb79-1"><a href="#cb79-1" aria-hidden="true" tabindex="-1"></a>health_data_gdp_adjusted <span class="sc">|&gt;</span> </span>
+<span id="cb79-2"><a href="#cb79-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> year, <span class="at">y =</span> gdp_adjusted_government_health_exppc_ppp, <span class="at">color =</span> country)) <span class="sc">+</span></span>
+<span id="cb79-3"><a href="#cb79-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>() <span class="sc">+</span></span>
+<span id="cb79-4"><a href="#cb79-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_line</span>() <span class="sc">+</span></span>
+<span id="cb79-5"><a href="#cb79-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_fill_viridis</span>(<span class="at">option =</span> <span class="st">"D"</span>) <span class="sc">+</span></span>
+<span id="cb79-6"><a href="#cb79-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_bw</span>() <span class="sc">+</span></span>
+<span id="cb79-7"><a href="#cb79-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">title =</span> <span class="st">"Log of Government Health Expenditure over Time"</span>, <span class="at">subtitle =</span> <span class="st">"Measured as Percentage of GDP (Purchasing Power Parity)"</span>, <span class="at">y =</span> <span class="st">"Log of Government Health Expenditure"</span>, <span class="at">x =</span> <span class="st">"Year"</span>, <span class="at">caption =</span> <span class="st">"Data Source: World Bank Health Nutrition and Population Statistics Database"</span> ) <span class="sc">+</span></span>
+<span id="cb79-8"><a href="#cb79-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme</span>(<span class="at">legend.title=</span><span class="fu">element_blank</span>())</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb80"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb80-1"><a href="#cb80-1" aria-hidden="true" tabindex="-1"></a>health_data_gdp_adjusted <span class="sc">|&gt;</span> </span>
+<span id="cb80-2"><a href="#cb80-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> year, <span class="at">y =</span> gdp_adjusted_private_health_exppc_ppp, <span class="at">color =</span> country)) <span class="sc">+</span></span>
+<span id="cb80-3"><a href="#cb80-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>() <span class="sc">+</span></span>
+<span id="cb80-4"><a href="#cb80-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_line</span>() <span class="sc">+</span></span>
+<span id="cb80-5"><a href="#cb80-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_fill_viridis</span>(<span class="at">option =</span> <span class="st">"D"</span>) <span class="sc">+</span></span>
+<span id="cb80-6"><a href="#cb80-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_bw</span>() <span class="sc">+</span></span>
+<span id="cb80-7"><a href="#cb80-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">title =</span> <span class="st">"Log of Private Health Expenditure over Time"</span>, <span class="at">subtitle =</span> <span class="st">"Measured as Percentage of GDP (Purchasing Power Parity)"</span>, <span class="at">y =</span> <span class="st">"Log of Private Health Expenditure"</span>, <span class="at">x =</span> <span class="st">"Year"</span>, <span class="at">caption =</span> <span class="st">"Data Source: World Bank Health Nutrition and Population Statistics Database"</span> ) <span class="sc">+</span></span>
+<span id="cb80-8"><a href="#cb80-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme</span>(<span class="at">legend.title=</span><span class="fu">element_blank</span>())</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb81"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb81-1"><a href="#cb81-1" aria-hidden="true" tabindex="-1"></a>health_data_with_logs <span class="sc">|&gt;</span> </span>
+<span id="cb81-2"><a href="#cb81-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> year, <span class="at">y =</span> log_gdppc_ppp, <span class="at">color =</span> country)) <span class="sc">+</span></span>
+<span id="cb81-3"><a href="#cb81-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>() <span class="sc">+</span></span>
+<span id="cb81-4"><a href="#cb81-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_line</span>() <span class="sc">+</span></span>
+<span id="cb81-5"><a href="#cb81-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_fill_viridis</span>(<span class="at">option =</span> <span class="st">"D"</span>) <span class="sc">+</span></span>
+<span id="cb81-6"><a href="#cb81-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_bw</span>() <span class="sc">+</span></span>
+<span id="cb81-7"><a href="#cb81-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">title =</span> <span class="st">"Log of Gross Domestic Product over Time"</span>, <span class="at">subtitle =</span> <span class="st">"Adjusted for Purchasing Power Parity (PPP)"</span>, <span class="at">y =</span> <span class="st">"Log of GDP (PPP)"</span>, <span class="at">x =</span> <span class="st">"Year"</span>, <span class="at">caption =</span> <span class="st">"Data Source: World Bank Health Nutrition and Population Statistics Database"</span> ) <span class="sc">+</span></span>
+<span id="cb81-8"><a href="#cb81-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme</span>(<span class="at">legend.title=</span><span class="fu">element_blank</span>())</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb82"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb82-1"><a href="#cb82-1" aria-hidden="true" tabindex="-1"></a>health_data_with_logs <span class="sc">|&gt;</span> </span>
+<span id="cb82-2"><a href="#cb82-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> year, <span class="at">y =</span> unemployment_rate, <span class="at">color =</span> country)) <span class="sc">+</span></span>
+<span id="cb82-3"><a href="#cb82-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>() <span class="sc">+</span></span>
+<span id="cb82-4"><a href="#cb82-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_line</span>() <span class="sc">+</span></span>
+<span id="cb82-5"><a href="#cb82-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_fill_viridis</span>(<span class="at">option =</span> <span class="st">"D"</span>) <span class="sc">+</span></span>
+<span id="cb82-6"><a href="#cb82-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_bw</span>() <span class="sc">+</span></span>
+<span id="cb82-7"><a href="#cb82-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">title =</span> <span class="st">"Unemployment Rate over Time"</span>, <span class="at">y =</span> <span class="st">"Unemployment Rate (%)"</span>, <span class="at">x =</span> <span class="st">"Year"</span>, <span class="at">caption =</span> <span class="st">"Data Source: World Bank World Development Indicators Database"</span> ) <span class="sc">+</span></span>
+<span id="cb82-8"><a href="#cb82-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme</span>(<span class="at">legend.title=</span><span class="fu">element_blank</span>())</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb83"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb83-1"><a href="#cb83-1" aria-hidden="true" tabindex="-1"></a>health_data_with_logs <span class="sc">|&gt;</span> </span>
+<span id="cb83-2"><a href="#cb83-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> year, <span class="at">y =</span> urban_population, <span class="at">color =</span> country)) <span class="sc">+</span></span>
+<span id="cb83-3"><a href="#cb83-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>() <span class="sc">+</span></span>
+<span id="cb83-4"><a href="#cb83-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_line</span>() <span class="sc">+</span></span>
+<span id="cb83-5"><a href="#cb83-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_fill_viridis</span>(<span class="at">option =</span> <span class="st">"D"</span>) <span class="sc">+</span></span>
+<span id="cb83-6"><a href="#cb83-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_bw</span>() <span class="sc">+</span></span>
+<span id="cb83-7"><a href="#cb83-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">title =</span> <span class="st">"Urban Population Rate over Time"</span>, <span class="at">subtitle =</span> <span class="st">"Measured as Percentage of Population Living in Urban Areas"</span>, <span class="at">y =</span> <span class="st">"Urban Population Rate (%)"</span>, <span class="at">x =</span> <span class="st">"Year"</span>, <span class="at">caption =</span> <span class="st">"Data Source: World Bank Health Nutrition and Population Statistics Database"</span> ) <span class="sc">+</span></span>
+<span id="cb83-8"><a href="#cb83-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme</span>(<span class="at">legend.title=</span><span class="fu">element_blank</span>())</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb84"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb84-1"><a href="#cb84-1" aria-hidden="true" tabindex="-1"></a>health_data_with_logs <span class="sc">|&gt;</span> </span>
+<span id="cb84-2"><a href="#cb84-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> year, <span class="at">y =</span> log_kcal_per_capita, <span class="at">color =</span> country)) <span class="sc">+</span></span>
+<span id="cb84-3"><a href="#cb84-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>() <span class="sc">+</span></span>
+<span id="cb84-4"><a href="#cb84-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_line</span>() <span class="sc">+</span></span>
+<span id="cb84-5"><a href="#cb84-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_fill_viridis</span>(<span class="at">option =</span> <span class="st">"D"</span>) <span class="sc">+</span></span>
+<span id="cb84-6"><a href="#cb84-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_bw</span>() <span class="sc">+</span></span>
+<span id="cb84-7"><a href="#cb84-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">title =</span> <span class="st">"Log of Caloric Supply over Time"</span>, <span class="at">subtitle =</span> <span class="st">"Measured as Kilocalorie Supply per Capita"</span>, <span class="at">y =</span> <span class="st">"Log of Kcal Supply per Capita"</span>, <span class="at">x =</span> <span class="st">"Year"</span>, <span class="at">caption =</span> <span class="st">"Data Source: Our World in Data Food Supply Database"</span> ) <span class="sc">+</span></span>
+<span id="cb84-8"><a href="#cb84-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme</span>(<span class="at">legend.title=</span><span class="fu">element_blank</span>())</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb85"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb85-1"><a href="#cb85-1" aria-hidden="true" tabindex="-1"></a>health_data_with_logs <span class="sc">|&gt;</span> </span>
+<span id="cb85-2"><a href="#cb85-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> log_government_health_exppc_ppp, <span class="at">y =</span> obesity_rate, <span class="at">color =</span> country)) <span class="sc">+</span></span>
+<span id="cb85-3"><a href="#cb85-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>() <span class="sc">+</span></span>
+<span id="cb85-4"><a href="#cb85-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_smooth</span>(<span class="at">method =</span> <span class="st">"lm"</span>, <span class="at">se =</span> F, <span class="at">color =</span> <span class="st">"red"</span>) <span class="sc">+</span></span>
+<span id="cb85-5"><a href="#cb85-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_fill_viridis</span>(<span class="at">option =</span> <span class="st">"D"</span>) <span class="sc">+</span></span>
+<span id="cb85-6"><a href="#cb85-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_bw</span>() <span class="sc">+</span></span>
+<span id="cb85-7"><a href="#cb85-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">title =</span> <span class="st">"Government Health Expenditure vs. Obesity Rate"</span>, <span class="at">x =</span> <span class="st">"Log of Government Health Expenditure (% of GDP (PPP))"</span>, <span class="at">y =</span> <span class="st">"Obesity Rate (%)"</span>, <span class="at">caption =</span> <span class="st">"Data Source: World Bank Health Nutrition and Population Statistics Database"</span>) <span class="sc">+</span></span>
+<span id="cb85-8"><a href="#cb85-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme</span>(<span class="at">legend.title=</span><span class="fu">element_blank</span>())</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb86"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb86-1"><a href="#cb86-1" aria-hidden="true" tabindex="-1"></a>health_data_with_logs <span class="sc">|&gt;</span> </span>
+<span id="cb86-2"><a href="#cb86-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> log_private_health_exppc_ppp, <span class="at">y =</span> obesity_rate, <span class="at">color =</span> country)) <span class="sc">+</span></span>
+<span id="cb86-3"><a href="#cb86-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>() <span class="sc">+</span></span>
+<span id="cb86-4"><a href="#cb86-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_smooth</span>(<span class="at">method =</span> <span class="st">"lm"</span>, <span class="at">se =</span> F, <span class="at">color =</span> <span class="st">"red"</span>) <span class="sc">+</span></span>
+<span id="cb86-5"><a href="#cb86-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_fill_viridis</span>(<span class="at">option =</span> <span class="st">"D"</span>) <span class="sc">+</span></span>
+<span id="cb86-6"><a href="#cb86-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_bw</span>() <span class="sc">+</span></span>
+<span id="cb86-7"><a href="#cb86-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">title =</span> <span class="st">"Private Health Expenditure vs. Obesity Rate"</span>, <span class="at">x =</span> <span class="st">"Log of Private Health Expenditure (% of GDP (PPP))"</span>, <span class="at">y =</span> <span class="st">"Obesity Rate (%)"</span>, <span class="at">caption =</span> <span class="st">"Data Source: World Bank Health Nutrition and Population Statistics Database"</span>) <span class="sc">+</span></span>
+<span id="cb86-8"><a href="#cb86-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme</span>(<span class="at">legend.title=</span><span class="fu">element_blank</span>())</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb87"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb87-1"><a href="#cb87-1" aria-hidden="true" tabindex="-1"></a>health_data_with_logs <span class="sc">|&gt;</span> </span>
+<span id="cb87-2"><a href="#cb87-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> log_government_health_exppc_ppp, <span class="at">y =</span> hypertension_rate, <span class="at">color =</span> country)) <span class="sc">+</span></span>
+<span id="cb87-3"><a href="#cb87-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>() <span class="sc">+</span></span>
+<span id="cb87-4"><a href="#cb87-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_smooth</span>(<span class="at">method =</span> <span class="st">"lm"</span>, <span class="at">se =</span> F, <span class="at">color =</span> <span class="st">"red"</span>) <span class="sc">+</span></span>
+<span id="cb87-5"><a href="#cb87-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_fill_viridis</span>(<span class="at">option =</span> <span class="st">"D"</span>) <span class="sc">+</span></span>
+<span id="cb87-6"><a href="#cb87-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_bw</span>() <span class="sc">+</span></span>
+<span id="cb87-7"><a href="#cb87-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">title =</span> <span class="st">"Government Health Expenditure vs. Hypertension Rate"</span>, <span class="at">x =</span> <span class="st">"Log of Government Health Expenditure (% of GDP (PPP))"</span>, <span class="at">y =</span> <span class="st">"Hypertension Rate (%)"</span>, <span class="at">caption =</span> <span class="st">"Data Source: World Bank Health Nutrition and Population Statistics Database"</span>) <span class="sc">+</span></span>
+<span id="cb87-8"><a href="#cb87-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme</span>(<span class="at">legend.title=</span><span class="fu">element_blank</span>())</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb88"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb88-1"><a href="#cb88-1" aria-hidden="true" tabindex="-1"></a>health_data_with_logs <span class="sc">|&gt;</span> </span>
+<span id="cb88-2"><a href="#cb88-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> log_private_health_exppc_ppp, <span class="at">y =</span> hypertension_rate, <span class="at">color =</span> country)) <span class="sc">+</span></span>
+<span id="cb88-3"><a href="#cb88-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>() <span class="sc">+</span></span>
+<span id="cb88-4"><a href="#cb88-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_smooth</span>(<span class="at">method =</span> <span class="st">"lm"</span>, <span class="at">se =</span> F, <span class="at">color =</span> <span class="st">"red"</span>) <span class="sc">+</span></span>
+<span id="cb88-5"><a href="#cb88-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_fill_viridis</span>(<span class="at">option =</span> <span class="st">"D"</span>) <span class="sc">+</span></span>
+<span id="cb88-6"><a href="#cb88-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_bw</span>() <span class="sc">+</span></span>
+<span id="cb88-7"><a href="#cb88-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">title =</span> <span class="st">"Private Health Expenditure vs. Hypertension Rate"</span>, <span class="at">x =</span> <span class="st">"Log of Private Health Expenditure (% of GDP (PPP))"</span>, <span class="at">y =</span> <span class="st">"Hypertension Rate (%)"</span>, <span class="at">caption =</span> <span class="st">"Data Source: World Bank Health Nutrition and Population Statistics Database"</span>) <span class="sc">+</span></span>
+<span id="cb88-8"><a href="#cb88-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme</span>(<span class="at">legend.title=</span><span class="fu">element_blank</span>())</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb89"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb89-1"><a href="#cb89-1" aria-hidden="true" tabindex="-1"></a>health_data_with_logs <span class="sc">|&gt;</span> </span>
+<span id="cb89-2"><a href="#cb89-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> log_government_health_exppc_ppp, <span class="at">y =</span> disease_mortality_rate, <span class="at">color =</span> country)) <span class="sc">+</span></span>
+<span id="cb89-3"><a href="#cb89-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>() <span class="sc">+</span></span>
+<span id="cb89-4"><a href="#cb89-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_smooth</span>(<span class="at">method =</span> <span class="st">"lm"</span>, <span class="at">se =</span> F, <span class="at">color =</span> <span class="st">"red"</span>) <span class="sc">+</span></span>
+<span id="cb89-5"><a href="#cb89-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_fill_viridis</span>(<span class="at">option =</span> <span class="st">"D"</span>) <span class="sc">+</span></span>
+<span id="cb89-6"><a href="#cb89-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_bw</span>() <span class="sc">+</span></span>
+<span id="cb89-7"><a href="#cb89-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">title =</span> <span class="st">"Government Health Expenditure vs. Disease Mortality Rate"</span>, <span class="at">subtitle =</span> <span class="st">"Disease Mortality Refers to Mortality from CVD, Cancer, Diabeter, or CRD"</span>, <span class="at">x =</span> <span class="st">"Log of Government Health Expenditure (% of GDP (PPP))"</span>, <span class="at">y =</span> <span class="st">"Mortality Rate (%)"</span>, <span class="at">caption =</span> <span class="st">"Data Source: World Bank Health Nutrition and Population Statistics Database"</span>) <span class="sc">+</span></span>
+<span id="cb89-8"><a href="#cb89-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme</span>(<span class="at">legend.title=</span><span class="fu">element_blank</span>())</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb90"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb90-1"><a href="#cb90-1" aria-hidden="true" tabindex="-1"></a>health_data_with_logs <span class="sc">|&gt;</span> </span>
+<span id="cb90-2"><a href="#cb90-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(<span class="fu">aes</span>(<span class="at">x =</span> log_government_health_exppc_ppp, <span class="at">y =</span> disease_mortality_rate, <span class="at">color =</span> country)) <span class="sc">+</span></span>
+<span id="cb90-3"><a href="#cb90-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>() <span class="sc">+</span></span>
+<span id="cb90-4"><a href="#cb90-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_smooth</span>(<span class="at">method =</span> <span class="st">"lm"</span>, <span class="at">se =</span> F, <span class="at">color =</span> <span class="st">"red"</span>) <span class="sc">+</span></span>
+<span id="cb90-5"><a href="#cb90-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">scale_fill_viridis</span>(<span class="at">option =</span> <span class="st">"D"</span>) <span class="sc">+</span></span>
+<span id="cb90-6"><a href="#cb90-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme_bw</span>() <span class="sc">+</span></span>
+<span id="cb90-7"><a href="#cb90-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">labs</span>(<span class="at">title =</span> <span class="st">"Private Health Expenditure vs. Disease Mortality Rate"</span>, <span class="at">subtitle =</span> <span class="st">"Disease Mortality Refers to Mortality from CVD, Cancer, Diabeter, or CRD"</span>, <span class="at">x =</span> <span class="st">"Log of Private Health Expenditure (% of GDP (PPP))"</span>, <span class="at">y =</span> <span class="st">"Mortality Rate (%)"</span>, <span class="at">caption =</span> <span class="st">"Data Source: World Bank Health Nutrition and Population Statistics Database"</span>) <span class="sc">+</span></span>
+<span id="cb90-8"><a href="#cb90-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme</span>(<span class="at">legend.title=</span><span class="fu">element_blank</span>())</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+</section>
+<section id="test-heteroskedasticity-brown-forsythe-test" class="level2">
+<h2 class="anchored" data-anchor-id="test-heteroskedasticity-brown-forsythe-test">Test Heteroskedasticity: Brown-Forsythe test</h2>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb91"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb91-1"><a href="#cb91-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Load required libraries</span></span>
+<span id="cb91-2"><a href="#cb91-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(onewaytests)</span>
+<span id="cb91-3"><a href="#cb91-3" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(dplyr)</span>
+<span id="cb91-4"><a href="#cb91-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb91-5"><a href="#cb91-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Step 1: Prepare the data</span></span>
+<span id="cb91-6"><a href="#cb91-6" aria-hidden="true" tabindex="-1"></a><span class="co"># We'll use the residuals from your original model to check for homoscedasticity</span></span>
+<span id="cb91-7"><a href="#cb91-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb91-8"><a href="#cb91-8" aria-hidden="true" tabindex="-1"></a><span class="co"># First, run your original model</span></span>
+<span id="cb91-9"><a href="#cb91-9" aria-hidden="true" tabindex="-1"></a>original_model <span class="ot">&lt;-</span> <span class="fu">plm</span>(<span class="at">formula =</span> obesity_rate <span class="sc">~</span> gdp_adjusted_log_private_health_exp <span class="sc">+</span> </span>
+<span id="cb91-10"><a href="#cb91-10" aria-hidden="true" tabindex="-1"></a>    gdp_adjusted_log_public_health_exp <span class="sc">+</span> log_gdppc_ppp <span class="sc">+</span> gdp_adjusted_unemployment_rate <span class="sc">+</span> </span>
+<span id="cb91-11"><a href="#cb91-11" aria-hidden="true" tabindex="-1"></a>    gdp_adjusted_urban_population_rate <span class="sc">+</span> gdp_adjusted_log_kcal_supply, </span>
+<span id="cb91-12"><a href="#cb91-12" aria-hidden="true" tabindex="-1"></a>    <span class="at">data =</span> health_data_gdp_adjusted, <span class="at">model =</span> <span class="st">"within"</span>, <span class="at">index =</span> <span class="fu">c</span>(<span class="st">"country"</span>, <span class="st">"year"</span>))</span>
+<span id="cb91-13"><a href="#cb91-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb91-14"><a href="#cb91-14" aria-hidden="true" tabindex="-1"></a><span class="co"># Extract residuals</span></span>
+<span id="cb91-15"><a href="#cb91-15" aria-hidden="true" tabindex="-1"></a>residuals <span class="ot">&lt;-</span> <span class="fu">residuals</span>(original_model)</span>
+<span id="cb91-16"><a href="#cb91-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb91-17"><a href="#cb91-17" aria-hidden="true" tabindex="-1"></a><span class="co"># Create a data frame with residuals and country</span></span>
+<span id="cb91-18"><a href="#cb91-18" aria-hidden="true" tabindex="-1"></a>data_for_test <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(</span>
+<span id="cb91-19"><a href="#cb91-19" aria-hidden="true" tabindex="-1"></a>  <span class="at">residuals =</span> residuals,</span>
+<span id="cb91-20"><a href="#cb91-20" aria-hidden="true" tabindex="-1"></a>  <span class="at">country =</span> health_data_gdp_adjusted<span class="sc">$</span>country</span>
+<span id="cb91-21"><a href="#cb91-21" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb91-22"><a href="#cb91-22" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb91-23"><a href="#cb91-23" aria-hidden="true" tabindex="-1"></a><span class="co"># Step 2: Perform Brown-Forsythe test</span></span>
+<span id="cb91-24"><a href="#cb91-24" aria-hidden="true" tabindex="-1"></a>bf_test <span class="ot">&lt;-</span> <span class="fu">bf.test</span>(residuals <span class="sc">~</span> country, <span class="at">data =</span> data_for_test)</span>
+<span id="cb91-25"><a href="#cb91-25" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb91-26"><a href="#cb91-26" aria-hidden="true" tabindex="-1"></a><span class="co"># Step 3: Print the results</span></span>
+<span id="cb91-27"><a href="#cb91-27" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(bf_test)</span>
+<span id="cb91-28"><a href="#cb91-28" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb91-29"><a href="#cb91-29" aria-hidden="true" tabindex="-1"></a><span class="co"># Step 4: Interpret the results</span></span>
+<span id="cb91-30"><a href="#cb91-30" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"</span><span class="sc">\n</span><span class="st">Interpretation:</span><span class="sc">\n</span><span class="st">"</span>)</span>
+<span id="cb91-31"><a href="#cb91-31" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> (bf_test<span class="sc">$</span>p.value <span class="sc">&lt;</span> <span class="fl">0.05</span>) {</span>
+<span id="cb91-32"><a href="#cb91-32" aria-hidden="true" tabindex="-1"></a>  <span class="fu">cat</span>(<span class="st">"The Brown-Forsythe test is significant (p &lt; 0.05).</span><span class="sc">\n</span><span class="st">"</span>)</span>
+<span id="cb91-33"><a href="#cb91-33" aria-hidden="true" tabindex="-1"></a>  <span class="fu">cat</span>(<span class="st">"This suggests that the variances are not equal across countries.</span><span class="sc">\n</span><span class="st">"</span>)</span>
+<span id="cb91-34"><a href="#cb91-34" aria-hidden="true" tabindex="-1"></a>  <span class="fu">cat</span>(<span class="st">"You may need to consider robust standard errors or alternative modeling approaches.</span><span class="sc">\n</span><span class="st">"</span>)</span>
+<span id="cb91-35"><a href="#cb91-35" aria-hidden="true" tabindex="-1"></a>} <span class="cf">else</span> {</span>
+<span id="cb91-36"><a href="#cb91-36" aria-hidden="true" tabindex="-1"></a>  <span class="fu">cat</span>(<span class="st">"The Brown-Forsythe test is not significant (p &gt;= 0.05).</span><span class="sc">\n</span><span class="st">"</span>)</span>
+<span id="cb91-37"><a href="#cb91-37" aria-hidden="true" tabindex="-1"></a>  <span class="fu">cat</span>(<span class="st">"This suggests that the variances are approximately equal across countries.</span><span class="sc">\n</span><span class="st">"</span>)</span>
+<span id="cb91-38"><a href="#cb91-38" aria-hidden="true" tabindex="-1"></a>  <span class="fu">cat</span>(<span class="st">"The assumption of homoscedasticity for your panel data model may be reasonable.</span><span class="sc">\n</span><span class="st">"</span>)</span>
+<span id="cb91-39"><a href="#cb91-39" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<section id="result-heteroskedasticity-is-not-an-issue-in-our-model" class="level3">
+<h3 class="anchored" data-anchor-id="result-heteroskedasticity-is-not-an-issue-in-our-model">Result: Heteroskedasticity is not an issue in our model</h3>
+</section>
+<section id="tests-for-normality-of-residuals-and-independence-of-residuals-not-necessary.-our-model-assumes-non-constant-variance-and-dependent-variables." class="level3">
+<h3 class="anchored" data-anchor-id="tests-for-normality-of-residuals-and-independence-of-residuals-not-necessary.-our-model-assumes-non-constant-variance-and-dependent-variables.">Tests for normality of residuals and independence of residuals not necessary. Our model assumes non-constant variance and dependent variables.</h3>
+</section>
+</section>
+<section id="make-sure-all-vars-are-in-the-right-scale" class="level2">
+<h2 class="anchored" data-anchor-id="make-sure-all-vars-are-in-the-right-scale">Make sure all vars are in the right scale</h2>
+</section>
+<section id="check-if-predictions-fall-outside-of-the-proper-range" class="level2">
+<h2 class="anchored" data-anchor-id="check-if-predictions-fall-outside-of-the-proper-range">Check if predictions fall outside of the proper range</h2>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb92"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb92-1"><a href="#cb92-1" aria-hidden="true" tabindex="-1"></a>test_model <span class="ot">&lt;-</span> <span class="fu">plm</span>(<span class="at">formula =</span> obesity_rate <span class="sc">~</span> gdp_adjusted_log_private_health_exp <span class="sc">+</span> </span>
+<span id="cb92-2"><a href="#cb92-2" aria-hidden="true" tabindex="-1"></a>    gdp_adjusted_log_public_health_exp <span class="sc">+</span> log_gdppc_ppp <span class="sc">+</span> gdp_adjusted_unemployment_rate <span class="sc">+</span> </span>
+<span id="cb92-3"><a href="#cb92-3" aria-hidden="true" tabindex="-1"></a>    gdp_adjusted_urban_population_rate <span class="sc">+</span> gdp_adjusted_log_kcal_supply, </span>
+<span id="cb92-4"><a href="#cb92-4" aria-hidden="true" tabindex="-1"></a>    <span class="at">data =</span> health_data_gdp_adjusted, <span class="at">model =</span> <span class="st">"within"</span>, <span class="at">index =</span> <span class="fu">c</span>(<span class="st">"country"</span>,</span>
+<span id="cb92-5"><a href="#cb92-5" aria-hidden="true" tabindex="-1"></a>        <span class="st">"year"</span>))</span>
+<span id="cb92-6"><a href="#cb92-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb92-7"><a href="#cb92-7" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(test_model)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb93"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb93-1"><a href="#cb93-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Select only numeric columns and store them in `test_df`</span></span>
+<span id="cb93-2"><a href="#cb93-2" aria-hidden="true" tabindex="-1"></a>test_df <span class="ot">&lt;-</span> health_data_gdp_adjusted <span class="sc">|&gt;</span> </span>
+<span id="cb93-3"><a href="#cb93-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(<span class="fu">where</span>(is.numeric))</span>
+<span id="cb93-4"><a href="#cb93-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb93-5"><a href="#cb93-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Install and load GGally if not already installed</span></span>
+<span id="cb93-6"><a href="#cb93-6" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> (<span class="sc">!</span><span class="fu">require</span>(GGally)) <span class="fu">install.packages</span>(<span class="st">"GGally"</span>)</span>
+<span id="cb93-7"><a href="#cb93-7" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(GGally)</span>
+<span id="cb93-8"><a href="#cb93-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb93-9"><a href="#cb93-9" aria-hidden="true" tabindex="-1"></a><span class="co"># Create a pairs plot using ggpairs()</span></span>
+<span id="cb93-10"><a href="#cb93-10" aria-hidden="true" tabindex="-1"></a>GGally<span class="sc">::</span><span class="fu">ggpairs</span>(test_df)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb94"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb94-1"><a href="#cb94-1" aria-hidden="true" tabindex="-1"></a>predictions <span class="ot">&lt;-</span> <span class="fu">predict</span>(test_model)</span>
+<span id="cb94-2"><a href="#cb94-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb94-3"><a href="#cb94-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Check if predictions go out of bounds</span></span>
+<span id="cb94-4"><a href="#cb94-4" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(predictions)</span>
+<span id="cb94-5"><a href="#cb94-5" aria-hidden="true" tabindex="-1"></a><span class="fu">any</span>(predictions <span class="sc">&lt;</span> <span class="dv">0</span> <span class="sc">|</span> predictions <span class="sc">&gt;</span> <span class="dv">100</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>###Use Stepwise selection to determine if predictors can be dropped</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb95"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb95-1"><a href="#cb95-1" aria-hidden="true" tabindex="-1"></a><span class="fu">step</span>(pooling_model, <span class="at">direction=</span><span class="st">"both"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb96"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb96-1"><a href="#cb96-1" aria-hidden="true" tabindex="-1"></a><span class="fu">stepAIC</span>(pooling_model, <span class="at">direction =</span> <span class="st">"both"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="logit-model" class="level2">
+<h2 class="anchored" data-anchor-id="logit-model">Logit model?</h2>
+</section>
+
+</main>
+<!-- /main column -->
+<script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const isCodeAnnotation = (el) => {
+    for (const clz of el.classList) {
+      if (clz.startsWith('code-annotation-')) {                     
+        return true;
+      }
+    }
+    return false;
+  }
+  const clipboard = new window.ClipboardJS('.code-copy-button', {
+    text: function(trigger) {
+      const codeEl = trigger.previousElementSibling.cloneNode(true);
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+  });
+  clipboard.on('success', function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    let tooltip;
+    if (window.bootstrap) {
+      button.setAttribute("data-bs-toggle", "tooltip");
+      button.setAttribute("data-bs-placement", "left");
+      button.setAttribute("data-bs-title", "Copied!");
+      tooltip = new bootstrap.Tooltip(button, 
+        { trigger: "manual", 
+          customClass: "code-copy-button-tooltip",
+          offset: [0, -8]});
+      tooltip.show();    
+    }
+    setTimeout(function() {
+      if (tooltip) {
+        tooltip.hide();
+        button.removeAttribute("data-bs-title");
+        button.removeAttribute("data-bs-toggle");
+        button.removeAttribute("data-bs-placement");
+      }
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  });
+  function tippyHover(el, contentFn) {
+    const config = {
+      allowHTML: true,
+      content: contentFn,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start'
+    };
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      // use id or data attribute instead here
+      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      return note.innerHTML;
+    });
+  }
+      let selectedAnnoteEl;
+      const selectorForAnnotation = ( cell, annotation) => {
+        let cellAttr = 'data-code-cell="' + cell + '"';
+        let lineAttr = 'data-code-annotation="' +  annotation + '"';
+        const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+        return selector;
+      }
+      const selectCodeLines = (annoteEl) => {
+        const doc = window.document;
+        const targetCell = annoteEl.getAttribute("data-target-cell");
+        const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+        const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+        const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+        const lineIds = lines.map((line) => {
+          return targetCell + "-" + line;
+        })
+        let top = null;
+        let height = null;
+        let parent = null;
+        if (lineIds.length > 0) {
+            //compute the position of the single el (top and bottom and make a div)
+            const el = window.document.getElementById(lineIds[0]);
+            top = el.offsetTop;
+            height = el.offsetHeight;
+            parent = el.parentElement.parentElement;
+          if (lineIds.length > 1) {
+            const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+            const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+            height = bottom - top;
+          }
+          if (top !== null && height !== null && parent !== null) {
+            // cook up a div (if necessary) and position it 
+            let div = window.document.getElementById("code-annotation-line-highlight");
+            if (div === null) {
+              div = window.document.createElement("div");
+              div.setAttribute("id", "code-annotation-line-highlight");
+              div.style.position = 'absolute';
+              parent.appendChild(div);
+            }
+            div.style.top = top - 2 + "px";
+            div.style.height = height + 4 + "px";
+            let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+            if (gutterDiv === null) {
+              gutterDiv = window.document.createElement("div");
+              gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+              gutterDiv.style.position = 'absolute';
+              const codeCell = window.document.getElementById(targetCell);
+              const gutter = codeCell.querySelector('.code-annotation-gutter');
+              gutter.appendChild(gutterDiv);
+            }
+            gutterDiv.style.top = top - 2 + "px";
+            gutterDiv.style.height = height + 4 + "px";
+          }
+          selectedAnnoteEl = annoteEl;
+        }
+      };
+      const unselectCodeLines = () => {
+        const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+        elementsIds.forEach((elId) => {
+          const div = window.document.getElementById(elId);
+          if (div) {
+            div.remove();
+          }
+        });
+        selectedAnnoteEl = undefined;
+      };
+      // Attach click handler to the DT
+      const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+      for (const annoteDlNode of annoteDls) {
+        annoteDlNode.addEventListener('click', (event) => {
+          const clickedEl = event.target;
+          if (clickedEl !== selectedAnnoteEl) {
+            unselectCodeLines();
+            const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+            if (activeEl) {
+              activeEl.classList.remove('code-annotation-active');
+            }
+            selectCodeLines(clickedEl);
+            clickedEl.classList.add('code-annotation-active');
+          } else {
+            // Unselect the line
+            unselectCodeLines();
+            clickedEl.classList.remove('code-annotation-active');
+          }
+        });
+      }
+  const findCites = (el) => {
+    const parentEl = el.parentElement;
+    if (parentEl) {
+      const cites = parentEl.dataset.cites;
+      if (cites) {
+        return {
+          el,
+          cites: cites.split(' ')
+        };
+      } else {
+        return findCites(el.parentElement)
+      }
+    } else {
+      return undefined;
+    }
+  };
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const citeInfo = findCites(ref);
+    if (citeInfo) {
+      tippyHover(citeInfo.el, function() {
+        var popup = window.document.createElement('div');
+        citeInfo.cites.forEach(function(cite) {
+          var citeDiv = window.document.createElement('div');
+          citeDiv.classList.add('hanging-indent');
+          citeDiv.classList.add('csl-entry');
+          var biblioDiv = window.document.getElementById('ref-' + cite);
+          if (biblioDiv) {
+            citeDiv.innerHTML = biblioDiv.innerHTML;
+          }
+          popup.appendChild(citeDiv);
+        });
+        return popup.innerHTML;
+      });
+    }
+  }
+});
+</script>
+</div> <!-- /content -->
+
+
+
+</body></html>

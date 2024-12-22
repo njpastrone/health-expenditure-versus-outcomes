@@ -1,0 +1,283 @@
+---
+title: "Cleaning and Joining Data"
+format: html
+editor: visual
+---
+
+## Load libraries and data
+
+```{r}
+#| show: false
+library(tidyverse)
+library(readr)
+library(readxl)
+```
+
+```{r, show=FALSE}
+predictors <- read_xlsx("../Data/P_Data_Extract_From_World_Development_Indicators (1).xlsx")
+responses <- read_xlsx("../Data/P_Data_Extract_From_Health_Nutrition_and_Population_Statistics (1).xlsx")
+food_supply <- read_csv("../Data/global-food (1).csv")
+```
+
+## Explore data
+
+```{r}
+glimpse(predictors)
+glimpse(responses)
+glimpse(food_supply)
+```
+
+## Clean World Bank data
+
+```{r}
+clean_years <- function(dataset) {
+  
+  dataset |> 
+    select(-c(`Country Name`, `Country Code`, `Series Name`, `Series Code`)) |> 
+  rename_with(~ map_chr(.x, ~ str_extract(.x, "\\d{4}")), everything()) |> 
+  bind_cols(dataset |> select(c(`Country Name`, `Country Code`, `Series Name`, `Series Code`))) |> 
+  relocate(`Country Name`, `Country Code`, `Series Name`, `Series Code`) |> 
+  pivot_longer(
+    cols = `1960`:`2023`, names_to = "year", values_to = "value"
+  ) |> 
+    mutate(
+      year = as.numeric(year),
+      value = as.numeric(value)
+    )
+    
+}
+```
+
+```{r}
+clean_years(predictors) -> predictors
+clean_years(responses) -> responses
+```
+
+## Bind and clean World Bank data
+
+```{r}
+predictors |> 
+  bind_rows(responses) -> wb_data
+```
+
+### Remove incorrect parameters
+
+```{r}
+wb_data |> 
+  distinct(`Series Name`)
+```
+
+### Reshape data
+
+```{r}
+wb_data |> 
+  filter(`Series Name` != "Last Updated: 07/01/2024", `Series Name` != "Data from database: Health Nutrition and Population Statistics", !is.na(`Series Name` )) |> 
+  pivot_wider(id_cols = c(`Country Name`, `Country Code`, year), names_from = `Series Name`, values_from = value) -> wb_data
+```
+
+### Renaming and filtering for development status
+
+### Drop irrelevant and NA variables
+
+```{r}
+wb_data |> 
+  select(-c(`Tuberculosis death rate (per 100,000 people)`, `Incidence of tuberculosis (per 100,000 people)`)) -> wb_data 
+```
+
+```{r}
+wb_data |> 
+  drop_na() -> wb_data
+```
+
+### Rename variables
+
+```{r}
+wb_data |> 
+  rename(country = `Country Name`, country_code = `Country Code`, current_health_exppc_ppp = `Current health expenditure per capita, PPP (current international $)`, government_health_exppc_ppp = `Domestic general government health expenditure per capita, PPP (current international $)`, private_health_exppc_ppp = `Domestic private health expenditure per capita, PPP (current international $)`, external_health_exppc_ppp = `External health expenditure per capita, PPP (current international $)`, urban_population = `Urban population (% of total population)`, gdppc_ppp = `GDP per capita, PPP (current international $)`, unemployment_rate = `Unemployment, total (% of total labor force) (national estimate)`, overweight_rate = `Prevalence of overweight (% of adults)`, hypertension_rate = `Prevalence of hypertension (% of adults ages 30-79)`, disease_mortality_rate = `Mortality from CVD, cancer, diabetes or CRD between exact ages 30 and 70 (%)`) -> wb_data
+```
+
+### Find most recent year of available data
+
+```{r}
+wb_data |> 
+  distinct(year) |> 
+  arrange(desc(year)) |> 
+  head(1)
+```
+
+### Keep developed countries based on most recent year
+
+```{r}
+wb_data |> 
+  filter(year == 2016, gdppc_ppp > 25000) |> 
+  select(country) |> 
+  as.list.data.frame() -> developed_countries
+
+wb_data |> 
+  filter(country %in% developed_countries$country) -> wb_data
+
+```
+
+### Remove non-country variables
+
+```{r}
+wb_data |> 
+  distinct(country)
+
+```
+
+```{r}
+wb_data |> 
+  filter(country %in% c("North America", "Post-demographic dividend") == FALSE) -> wb_data
+```
+
+```{r}
+wb_data |> 
+  head()
+```
+
+## Join World Bank and Food Supply data
+
+### Clean Food Supply data
+
+```{r}
+food_supply |> 
+  select(Country, Year, `Food supply (kcal per capita per day)`, `Food supply (Protein g per capita per day)`, `Food supply (Fat g per capita per day)`) |> 
+  rename(country = Country, year = Year, kcal_per_capita = `Food supply (kcal per capita per day)`, protein_per_capita_g = `Food supply (Protein g per capita per day)`, fat_per_capita_g = `Food supply (Fat g per capita per day)`) -> food_supply
+```
+
+```{r}
+food_supply |> 
+  head()
+```
+
+### Examine sameness of country columns
+
+```{r}
+wb_data |> 
+  distinct(country)
+```
+
+```{r}
+wb_data |> 
+  left_join(food_supply, by = join_by(country, year)) |> 
+  filter(is.na(kcal_per_capita) | is.na(protein_per_capita_g) | is.na(fat_per_capita_g)) |> 
+  distinct(country)
+```
+
+Note: manually searched for the above five countries not fully present in the food supply data. Found spelling differences for the Bahamas and South Korea, and incomplete data for other countries.
+
+### Fix country spelling in food supply data
+
+```{r}
+food_supply |> 
+  mutate(
+    country = case_when(
+      country == "Bahamas" ~ "Bahamas, The",
+      country == "South Korea" ~ "Korea, Rep.",
+      .default = country
+    )
+  ) -> food_supply
+```
+
+### Join dfs
+
+```{r}
+wb_data |> 
+  left_join(food_supply, by = join_by(country, year)) |> 
+  drop_na() -> full_wb_food_data
+
+```
+
+## Ensure Balanced Panel
+
+### Keep countries with complete data for an adequate number of years
+
+```{r}
+
+full_wb_food_data |> 
+  group_by(country) |> 
+  count() |> 
+  arrange(desc(n))
+
+```
+
+```{r}
+
+full_wb_food_data |> 
+  group_by(country) |> 
+  count() |> 
+  filter(n >= 14) |> 
+  as.list.data.frame() -> countries_to_include
+  
+
+full_wb_food_data <- full_wb_food_data |> 
+  filter(country %in% countries_to_include$country)
+```
+
+### Remove years without complete data
+
+```{r}
+full_wb_food_data |> 
+  group_by(year) |> 
+  count()
+```
+
+```{r}
+full_wb_food_data |> 
+  filter(year %in% c(2000, 2001, 2002) == FALSE) -> full_wb_food_data
+
+full_wb_food_data |> 
+  group_by(country) |> 
+  summarise(years_present = n_distinct(year)) |> 
+  filter(years_present == 14) -> final_countries_to_keep
+
+full_wb_food_data |> 
+  filter(country %in% final_countries_to_keep$country) -> full_wb_food_data
+
+```
+
+### Confirm balanced panel
+
+```{r}
+cat(
+  "Rows:", nrow(full_wb_food_data),
+  "| Countries:", full_wb_food_data |> distinct(country) |> count() |> pull(),
+  "| Years:", full_wb_food_data |> distinct(year) |> count() |> pull(),
+  "\nCountries * Years (should equal rows):",
+  (full_wb_food_data |> distinct(country) |> count() |> pull()) * 
+  (full_wb_food_data |> distinct(year) |> count() |> pull())
+)
+```
+
+## Final clean for export
+
+```{r}
+full_wb_food_data |> 
+  distinct(country) |> 
+  as.list()
+
+full_wb_food_data |> 
+  colnames()
+```
+### Get Metadata
+
+### Review data
+
+```{r}
+full_wb_food_data |> 
+  glimpse()
+```
+
+### Reclassify some columns
+
+```{r}
+full_wb_food_data |> 
+  mutate(country = as.factor(country), country_code = as.factor(country_code), year = as.integer(year)) -> full_wb_food_data
+```
+
+## Export Data
+
+```{r}
+write_csv(full_wb_food_data,"../Data/cleaned_full_dataset.csv",)
+```
