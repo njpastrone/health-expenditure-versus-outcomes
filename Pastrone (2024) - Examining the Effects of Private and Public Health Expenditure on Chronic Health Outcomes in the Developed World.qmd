@@ -1,6 +1,8 @@
 ---
 title: "Examining the Effects of Private and Public Health Expenditure on Chronic Health Outcomes in the Developed World"
-format: html
+format: 
+  html:
+    code-fold: true
 editor: visual
 author: "Nicolo Pastrone"
 date: "December 11, 2024"
@@ -30,7 +32,7 @@ library(psych)
 ```
 
 ```{r, include = FALSE}
-read_csv("../Data/cleaned_full_dataset.csv") -> health_data
+read_csv("Data/cleaned_full_dataset.csv") -> health_data
 ```
 
 ```{r, echo=FALSE}
