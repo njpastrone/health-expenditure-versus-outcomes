@@ -104,7 +104,7 @@ This study is limited by data availability but includes data for all developed c
 The parameters of interest are the following:
 
 | Full Variable Name | Code Name |
-|------------------------------------|------------------------------------|
+|----|----|
 | Country Name | country |
 | Country Code | country_code |
 | Year | year |
