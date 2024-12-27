@@ -12,7 +12,7 @@ The econometric analysis was conducted by Nicolo Pastrone for Dr. Evan Kraft's S
 To view the paper in pdf form, which allows for better readability with most charts in the appendix, see the pdf file. To view the paper in a quarto (qmd) format, clone the entire repository, run the file "Pastrone (2024) - Examining the Effects of Private and Public Health Expenditure on Chronic Health Outcomes in the Developed World.qmd" in your local R environment, then render to html format. The html format shows all charts and tables at their point of relevance in the paper, and may provide a more visually appearing experience.
 
 # Credit:
-Written solely by Nicolo Pastrone
+Written by Nicolo Pastrone
 
 Project completed December 11, 2024
 
